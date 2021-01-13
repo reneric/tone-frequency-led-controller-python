@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import pyaudio
-from numpy import zeros,linspace,short,fromstring,hstack,transpose,log
+from numpy import zeros,linspace,short,fromstring,hstack,transpose,log,frombuffer
 from scipy import fft
 from time import sleep
 import RPi.GPIO as GPIO
@@ -11,15 +11,13 @@ import adafruit_pca9685
 i2c = busio.I2C(board.SCL, board.SDA)
 pca = adafruit_pca9685.PCA9685(i2c)
 
-pca.frequency = 60
+pca.frequency = 5000
 
 
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-pins=[5,6,16]
-for pin in pins:
-    GPIO.setup(pin, GPIO.OUT)
+
 
 # p = GPIO.PWM(13, 100)
 # p.start(0)
@@ -35,7 +33,7 @@ debug=False
 # The frequency in which the channels begin (Hz)
 CHANNEL_START=1100
 # The number of channels connected
-CHANNEL_COUNT=32
+CHANNEL_COUNT=5
 # The size of each channel (Hz)
 CHANNEL_SIZE=100
 
@@ -61,6 +59,7 @@ max_freq=0
 channel_start_freqs=[]
 channel_end_freqs=[]
 status=[]
+laststatus=[]
 
 
 for i in range(0,CHANNEL_COUNT):
@@ -71,6 +70,7 @@ for i in range(0,CHANNEL_COUNT):
     channel_start_freqs.append(channel_start_freq)
     channel_end_freqs.append(channel_end_freq)
     status.append(False)
+    laststatus.append(False)
     channelhitcounts.append(0)
     resetcounts.append(0)
     clearcounts.append(0)
@@ -89,11 +89,10 @@ def determine_channel_num(fq):
 
 def get_freq():
     while _stream.get_read_available()< NUM_SAMPLES: sleep(0.01)
-    audio_data  = fromstring(_stream.read(
-         _stream.get_read_available()), dtype=short)[-NUM_SAMPLES:]
+    audio_data  = frombuffer(_stream.read(_stream.get_read_available()), dtype=short)[-NUM_SAMPLES:]
     # Each data point is a signed 16 bit number, so we can normalize by dividing 32*1024
     normalized_data = audio_data / 32768.0
-    intensity = abs(fft(normalized_data))[:NUM_SAMPLES/2]
+    intensity = abs(fft.fft(normalized_data))[:NUM_SAMPLES//2]
     
     which = intensity[1:].argmax()+1    # use quadratic interpolation around the max
     if which != len(intensity)-1:
@@ -105,6 +104,18 @@ def get_freq():
         return which*SAMPLING_RATE/NUM_SAMPLES
 
 
+def turn_on_led(led):
+    print('turn_on_led %s' % led)
+    # pca.channels[led].duty_cycle = 0xffff
+    for i in range(0, 1024):
+        pca.channels[led].duty_cycle = i
+
+def turn_off_led(led):
+    print('turn_off_led %s' % led)
+    for i in range(0xffff, 0, -1000):
+        pca.channels[led].duty_cycle = i
+
+
 while True:
     frequency = get_freq()
     
@@ -113,6 +124,7 @@ while True:
         channel_index=channel-1
 
         if channel:
+            print(frequency)
             channelhitcounts[channel_index]+=1
             resetcounts[channel_index]=0
             print(channelhitcounts[channel_index])
@@ -130,6 +142,7 @@ while True:
               
               
     elif frequency > 5000 and frequency < 6000:
+        print(frequency)
         for i in range(0, len(status)):
             status[i]=False
       
@@ -142,16 +155,12 @@ while True:
             if (resetcounts[i]>=resetlength): resetcounts[i]=0
 
     for i in range(0, CHANNEL_COUNT):
-        if status[i]:
-            GPIO.output(pins[i], GPIO.HIGH)
-        else:
-            GPIO.output(pins[i], GPIO.LOW)
+        print('%s, %s' % (laststatus[i], status[i]))
+        if laststatus[i] != status[i]:
+            if status[i]:
+                turn_on_led(i)
+            else:
+                turn_off_led(i)
+            laststatus[i] = status[i]
+            
       
-
-def turn_on_led(led):
-    for i in range(0xffff):
-        pca.channels[led].duty_cycle = i
-
-def turn_off_led(led):
-    for i in range(0xffff, 0, -1):
-        pca.channels[led].duty_cycle = i
