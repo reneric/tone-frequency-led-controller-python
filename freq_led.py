@@ -4,6 +4,16 @@ from numpy import zeros,linspace,short,fromstring,hstack,transpose,log
 from scipy import fft
 from time import sleep
 import RPi.GPIO as GPIO
+import board
+import busio
+import adafruit_pca9685
+
+i2c = busio.I2C(board.SCL, board.SDA)
+pca = adafruit_pca9685.PCA9685(i2c)
+
+pca.frequency = 60
+
+
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
@@ -25,7 +35,7 @@ debug=False
 # The frequency in which the channels begin (Hz)
 CHANNEL_START=1100
 # The number of channels connected
-CHANNEL_COUNT=len(pins)
+CHANNEL_COUNT=32
 # The size of each channel (Hz)
 CHANNEL_SIZE=100
 
@@ -53,10 +63,10 @@ channel_end_freqs=[]
 status=[]
 
 
-for i in range(0,L_COUNT):
+for i in range(0,CHANNEL_COUNT):
     led = i + 1
     channel_start_freq = CHANNEL_START + (i * CHANNEL_SIZE)
-    CHANNEL_COUNT = channel_start_freq + CHANNEL_SIZE - 1
+    channel_end_freq = channel_start_freq + CHANNEL_SIZE - 1
     
     channel_start_freqs.append(channel_start_freq)
     channel_end_freqs.append(channel_end_freq)
@@ -70,7 +80,7 @@ for i in range(0,L_COUNT):
 
 def determine_channel_num(fq):
     channel=0
-    for i in range(0,L_COUNT):
+    for i in range(0,CHANNEL_COUNT):
         channel_start_freq = channel_start_freqs[i]
         channel_end_freq = channel_end_freqs[i]
         if fq >= channel_start_freq and fq <= channel_end_freq:
@@ -112,10 +122,10 @@ while True:
                 print('LED %s' % (channel))
                 status[channel_index]=frequency < channel_start_freqs[channel_index] + 50
         else:
-            for i in range(0, len(pins)):
+            for i in range(0, CHANNEL_COUNT):
                 channelhitcounts[i]=0
                 resetcounts[i]+=1
-                if debug: print "\t\t\treset",resetcounts[i]
+                if debug: print('reset' % resetcounts[i])
                 if (resetcounts[i]>=resetlength): resetcounts[i]=0
               
               
@@ -125,15 +135,23 @@ while True:
       
     else:
         # print('Channel: %s' % (channel))
-        for i in range(0, len(pins)):
+        for i in range(0, CHANNEL_COUNT):
             channelhitcounts[i]=0
             resetcounts[i]+=1
-            if debug: print "\t\t\treset",resetcounts[i]
+            if debug: print('reset' % resetcounts[i])
             if (resetcounts[i]>=resetlength): resetcounts[i]=0
 
-    for i in range(0, len(pins)):
+    for i in range(0, CHANNEL_COUNT):
         if status[i]:
             GPIO.output(pins[i], GPIO.HIGH)
         else:
             GPIO.output(pins[i], GPIO.LOW)
       
+
+def turn_on_led(led):
+    for i in range(0xffff):
+        pca.channels[led].duty_cycle = i
+
+def turn_off_led(led):
+    for i in range(0xffff, 0, -1):
+        pca.channels[led].duty_cycle = i
