@@ -17,13 +17,13 @@ for pin in pins:
 # Margin of error
 BANDWIDTH = 10
 # How many 46ms segments before we determine it is a legitimate tone
-triggerlength=40
+triggerlength=8
 # How many false 46ms blips before we declare the alarm is not ringing
 resetlength=10
 # Enable debug output
 debug=False
 # The frequency in which the channels begin (Hz)
-CHANNEL_START=500
+CHANNEL_START=1100
 # The number of channels connected
 CHANNEL_COUNT=len(pins)
 # The size of each channel (Hz)
@@ -52,20 +52,20 @@ channel_start_freqs=[]
 channel_end_freqs=[]
 status=[]
 
-def initialize():
-    for i in range(0,L_COUNT):
-        led = i + 1
-        channel_start_freq = CHANNEL_START + (i * CHANNEL_SIZE)
-        CHANNEL_COUNT = channel_start_freq + CHANNEL_SIZE - 1
-        
-        channel_start_freqs.append(channel_start_freq)
-        channel_end_freqs.append(channel_end_freq)
-        status.append(False)
-        channelhitcounts.append(0)
-        resetcounts.append(0)
-        clearcounts.append(0)
-        max_freq=channel_end_freq
-        print('Channel %s (GPIO %s): Range %sHz - %sHz' % (led, pins[i], channel_start_freq, channel_end_freq))
+
+for i in range(0,L_COUNT):
+    led = i + 1
+    channel_start_freq = CHANNEL_START + (i * CHANNEL_SIZE)
+    CHANNEL_COUNT = channel_start_freq + CHANNEL_SIZE - 1
+    
+    channel_start_freqs.append(channel_start_freq)
+    channel_end_freqs.append(channel_end_freq)
+    status.append(False)
+    channelhitcounts.append(0)
+    resetcounts.append(0)
+    clearcounts.append(0)
+    max_freq=channel_end_freq
+    print('Channel %s (GPIO %s): Range %sHz - %sHz' % (led, pins[i], channel_start_freq, channel_end_freq))
 
 
 def determine_channel_num(fq):
@@ -95,27 +95,22 @@ def get_freq():
         return which*SAMPLING_RATE/NUM_SAMPLES
 
 
-initialize()
-
-
 while True:
     frequency = get_freq()
-
-    channel=determine_channel_num(frequency)
-    channel_index=channel-1
     
     if frequency > CHANNEL_START and frequency < max_freq:
-        CHANNEL_COUNT=determine_channel_num(frequency)
+        channel=determine_channel_num(frequency)
+        channel_index=channel-1
 
         if channel:
             channelhitcounts[channel_index]+=1
             resetcounts[channel_index]=0
             print(channelhitcounts[channel_index])
-            if (channelhitcounts[channel_index]>=triggerlength) and not status[channel_index]:
+            if (channelhitcounts[channel_index]>=triggerlength):
                 channelhitcounts[channel_index]=0
                 resetcounts[channel_index]=0
                 print('LED %s' % (channel))
-                status[channel_index]=True
+                status[channel_index]=frequency < channel_start_freqs[channel_index] + 50
         else:
             for i in range(0, len(pins)):
                 channelhitcounts[i]=0
