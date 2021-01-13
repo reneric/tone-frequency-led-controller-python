@@ -75,7 +75,7 @@ for i in range(0,CHANNEL_COUNT):
     resetcounts.append(0)
     clearcounts.append(0)
     max_freq=channel_end_freq
-    print('Channel %s (GPIO %s): Range %sHz - %sHz' % (led, pins[i], channel_start_freq, channel_end_freq))
+    print('Channel %s: Range %sHz - %sHz' % (led, channel_start_freq, channel_end_freq))
 
 
 def determine_channel_num(fq):
