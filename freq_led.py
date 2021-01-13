@@ -43,7 +43,7 @@ _stream = pa.open(format=pyaudio.paInt16,
 print("Frequency detector LED controller working. Press CTRL-C to quit.")
 
 
-blipcounts=[]
+channelhitcounts=[]
 resetcounts=[]
 clearcounts=[]
 
@@ -61,7 +61,7 @@ def initialize():
         channel_start_freqs.append(channel_start_freq)
         channel_end_freqs.append(channel_end_freq)
         status.append(False)
-        blipcounts.append(0)
+        channelhitcounts.append(0)
         resetcounts.append(0)
         clearcounts.append(0)
         max_freq=channel_end_freq
@@ -108,17 +108,17 @@ while True:
         CHANNEL_COUNT=determine_channel_num(frequency)
 
         if channel:
-            blipcounts[channel_index]+=1
+            channelhitcounts[channel_index]+=1
             resetcounts[channel_index]=0
-            print(blipcounts[channel_index])
-            if (blipcounts[channel_index]>=triggerlength) and not status[channel_index]:
-                blipcounts[channel_index]=0
+            print(channelhitcounts[channel_index])
+            if (channelhitcounts[channel_index]>=triggerlength) and not status[channel_index]:
+                channelhitcounts[channel_index]=0
                 resetcounts[channel_index]=0
                 print('LED %s' % (channel))
                 status[channel_index]=True
         else:
             for i in range(0, len(pins)):
-                blipcounts[i]=0
+                channelhitcounts[i]=0
                 resetcounts[i]+=1
                 if debug: print "\t\t\treset",resetcounts[i]
                 if (resetcounts[i]>=resetlength): resetcounts[i]=0
@@ -131,7 +131,7 @@ while True:
     else:
         # print('Channel: %s' % (channel))
         for i in range(0, len(pins)):
-            blipcounts[i]=0
+            channelhitcounts[i]=0
             resetcounts[i]+=1
             if debug: print "\t\t\treset",resetcounts[i]
             if (resetcounts[i]>=resetlength): resetcounts[i]=0
