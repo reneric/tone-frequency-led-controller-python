@@ -1,5 +1,40 @@
 # Tone Frequency LED Controller
-## Setup
+## Raspberry Pi OS
+Download and install [Raspberry Pi Imager](https://www.raspberrypi.org/software/) to a computer with an SD card reader.
+
+### Initial Configuration
+Insert the SD card back into your computer. There are three text files we will create/edit in boot. [Adafruit instructions](https://learn.adafruit.com/raspberry-pi-zero-creation/text-file-editing)
+
+1. wpa_supplicant.conf - wifi settings
+2. config.txt - global system settings
+3. ssh - an empty text file to enable ssh
+#### Wifi Configuration
+If using WiFi, edit wpa_supplicant.conf and add the network
+```
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=US
+ 
+network={
+    ssid="YOURSSID"
+    psk="YOURPASSWORD"
+    scan_ssid=1
+}
+```
+### Enable UART
+Enable UART on the GPIO header pins. If `config.txt` already exists, add the following to the end. If it does not exist, you will have to create the file
+```
+# Enable UART
+enable_uart=1
+```
+### Enable SSH
+Create an empty file named `ssh`
+```
+  $ touch ssh
+```
+
+
+# Setup
 ### Enable I2C Interface
 Run the following command to launch the raspi-config utility. Select “Interfacing Options”:
 ```
@@ -41,7 +76,7 @@ Listed below are all of the libraries and configurations needed to get the RPI s
   $ sudo pip3 install scipy
   $ sudo apt-get install libatlas-base-dev
 ```
-## Add program from the repository
+## Project code
 Clone the project into the `/home/pi` directory
 ```
   $ git clone https://github.com/reneric/tone-frequency-led-controller-python.git
