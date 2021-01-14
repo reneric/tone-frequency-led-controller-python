@@ -119,7 +119,7 @@ def turn_on_led(led):
 
 def turn_off_led(led):
     if debug: print('turn_off_led %s' % led)
-    for i in range(0xffff, 0, -LED_DIM_SPEED * 10):
+    for i in range(1000, 0, -LED_DIM_SPEED * 10):
         pca.channels[led].duty_cycle = i
 onprocesses=[]
 offprocesses=[]
@@ -142,6 +142,7 @@ def all_off():
 while True:
     frequency = get_freq()
     
+    # If frequency is within the LED single channel range
     if frequency > CHANNEL_START and frequency < max_freq:
         channel=determine_channel_num(frequency)
         channel_index=channel-1
@@ -172,6 +173,9 @@ while True:
             resetcounts[i]+=1
             if debug: print('reset' % resetcounts[i])
             if (resetcounts[i]>=resetlength): resetcounts[i]=0
+    
+    
+    # All On
     if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
         already_on = check_statuses(status)
         if not already_on:
@@ -181,8 +185,9 @@ while True:
                 status[i] = True
             print('---------------------')
             all_on()
-        
-    elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
+    
+    # All Off
+    if frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
         already_off = check_statuses(status, False)
         if not already_off:
             for i in range(0, CHANNEL_COUNT):
@@ -191,7 +196,9 @@ while True:
                 status[i] = False
             print('---------------------')
             all_off()
-    elif frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
+    
+    # If the frequency is greater than the two all on/off channels
+    if frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
         # Update the LED statuses if they have changed
         if laststatus != status:
             for i in range(0, CHANNEL_COUNT):
@@ -203,7 +210,6 @@ while True:
                         turn_off_led(i)
                     laststatus[i] = status[i]
             print('---------------------')
-    else:
-        None
+
             
       
