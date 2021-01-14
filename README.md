@@ -40,10 +40,12 @@ Listed below are all of the libraries and configurations needed to get the RPI s
 
   $ sudo pip3 install scipy
   $ sudo apt-get install libatlas-base-dev
-
+```
+## Install program
+Clone the project into the `/home/pi` directory
+```
   $ git clone https://github.com/reneric/tone-frequency-led-controller-python.git
 ```
-
 ## Run at startup
 In order for the program to run automatically at boot, we'll need modify the .bashrc file.
 Put your command at the bottom of ‘/home/pi/.bashrc’:
