@@ -30,7 +30,7 @@ debug=False
 # The frequency in which the channels begin (Hz)
 CHANNEL_START=1100
 # The number of channels connected
-CHANNEL_COUNT=5
+CHANNEL_COUNT=16
 # The size of each channel (Hz)
 CHANNEL_SIZE=100
 # LED Dim speed
