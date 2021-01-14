@@ -128,16 +128,16 @@ def all_on():
         p = Process(target=turn_on_led, args=(channel,))
         onprocesses.append(p)
         p.start()
-    # for t in onprocesses:
-    #     t.join()
+    for t in onprocesses:
+        t.join()
 
 def all_off():
     for channel in range(0, CHANNEL_COUNT):
         p = Process(target=turn_off_led, args=(channel,))
         offprocesses.append(p)
         p.start()
-    # for t in offprocesses:
-    #     t.join()
+    for t in offprocesses:
+        t.join()
 
 while True:
     frequency = get_freq()
