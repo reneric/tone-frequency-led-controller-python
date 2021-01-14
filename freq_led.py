@@ -189,8 +189,9 @@ while True:
     # All Off
     if frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
         already_off = check_statuses(status, False)
-        print('already_off', already_off)
+        
         if not already_off:
+            print('already_off', already_off)
             for i in range(0, CHANNEL_COUNT):
                 print('Channel %s: %s' % (i + 1, 'OFF'))
                 laststatus[i] = False
