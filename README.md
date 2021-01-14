@@ -41,7 +41,7 @@ Listed below are all of the libraries and configurations needed to get the RPI s
   $ sudo pip3 install scipy
   $ sudo apt-get install libatlas-base-dev
 ```
-## Install program
+## Add program from the repository
 Clone the project into the `/home/pi` directory
 ```
   $ git clone https://github.com/reneric/tone-frequency-led-controller-python.git
