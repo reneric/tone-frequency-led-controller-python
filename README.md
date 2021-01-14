@@ -25,15 +25,14 @@
 ```
 
 ## Run at startup
-In order for the program to run automatically at boot, we'll need to edit the file /etc/rc.local
-### Run the code below to edit rc.local
+In order for the program to run automatically at boot, we'll need modify the .bashrc file.
+### Put your command at the bottom of ‘/home/pi/.bashrc’. 
 ```
-  
-  $ sudo nano /etc/rc.local
+  $ sudo nano /home/pi/.bashrc
 ```
-### Add the following line above the exit
+### Go to the last line of the script and add:
 ```
   ...
-  sudo python /home/pi/tone-frequency-led-controller-python/freq_led.py &
+  python /home/pi/tone-frequency-led-controller-python/freq_led.py &
   exit 0
 ```
