@@ -26,7 +26,7 @@ triggerlength=8
 # How many false 46ms blips before we declare the alarm is not ringing
 resetlength=10
 # Enable debug output
-debug=
+debug=False
 # The frequency in which the channels begin (Hz)
 CHANNEL_START=1100
 # The number of channels connected
