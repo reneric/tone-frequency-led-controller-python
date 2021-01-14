@@ -47,6 +47,8 @@ _stream = pa.open(format=pyaudio.paInt16,
 
 print("Frequency detector LED controller working. Press CTRL-C to quit.")
 
+ALL_ON_FREQ=700
+ALL_OFF_FREQ=800
 
 channelhitcounts=[]
 resetcounts=[]
@@ -111,7 +113,6 @@ def turn_off_led(led):
     for i in range(0xffff, 0, -LED_DIM_SPEED):
         pca.channels[led].duty_cycle = i
 
-
 while True:
     frequency = get_freq()
     
@@ -137,11 +138,13 @@ while True:
                 if (resetcounts[i]>=resetlength): resetcounts[i]=0
               
               
-    elif frequency > 5000 and frequency < 6000:
+    elif frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
         print(frequency)
         for i in range(0, len(status)):
+            status[i]=True
+    elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
+        for i in range(0, len(status)):
             status[i]=False
-      
     else:
         # print('Channel: %s' % (channel))
         for i in range(0, CHANNEL_COUNT):
