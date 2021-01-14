@@ -32,7 +32,5 @@ In order for the program to run automatically at boot, we'll need modify the .ba
 ```
 ### Go to the last line of the script and add:
 ```
-  ...
   python /home/pi/tone-frequency-led-controller-python/freq_led.py &
-  exit 0
 ```
