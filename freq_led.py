@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import pyaudio
+from multiprocessing import Process
 from numpy import zeros,linspace,short,fromstring,hstack,transpose,log,frombuffer
 from scipy import fft
 from time import sleep
@@ -76,6 +77,14 @@ for i in range(0,CHANNEL_COUNT):
     max_freq=channel_end_freq
     print('Channel %s: Range %sHz - %sHz' % (led, channel_start_freq, channel_end_freq))
 
+def check_statuses(st, flag=True):  
+    chk = True
+    for item in st: 
+        if item != flag: 
+            chk = False
+            break; 
+              
+    return chk
 
 def determine_channel_num(fq):
     channel=0
@@ -104,14 +113,31 @@ def get_freq():
 
 
 def turn_on_led(led):
-    print('turn_on_led %s' % led)
+    if debug: print('turn_on_led %s' % led)
     for i in range(0, 0xffff, LED_DIM_SPEED):
         pca.channels[led].duty_cycle = i
 
 def turn_off_led(led):
-    print('turn_off_led %s' % led)
+    if debug: print('turn_off_led %s' % led)
     for i in range(0xffff, 0, -LED_DIM_SPEED):
         pca.channels[led].duty_cycle = i
+onprocesses=[]
+offprocesses=[]
+def all_on():
+    for channel in range(0, CHANNEL_COUNT):
+        p = Process(target=turn_on_led, args=(channel,))
+        onprocesses.append(p)
+        p.start()
+    for t in onprocesses:
+        t.join()
+
+def all_off():
+    for channel in range(0, CHANNEL_COUNT):
+        p = Process(target=turn_off_led, args=(channel,))
+        offprocesses.append(p)
+        p.start()
+    for t in offprocesses:
+        t.join()
 
 while True:
     frequency = get_freq()
@@ -121,14 +147,14 @@ while True:
         channel_index=channel-1
 
         if channel:
-            print(frequency)
+            if debug: print(frequency)
             channelhitcounts[channel_index]+=1
             resetcounts[channel_index]=0
-            print(channelhitcounts[channel_index])
+            if debug: print(channelhitcounts[channel_index])
             if (channelhitcounts[channel_index]>=triggerlength):
                 channelhitcounts[channel_index]=0
                 resetcounts[channel_index]=0
-                print('LED %s' % (channel))
+                if debug: print('LED %s' % (channel))
                 status[channel_index]=frequency < channel_start_freqs[channel_index] + 50
         else:
             for i in range(0, CHANNEL_COUNT):
@@ -138,13 +164,7 @@ while True:
                 if (resetcounts[i]>=resetlength): resetcounts[i]=0
               
               
-    elif frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
-        print(frequency)
-        for i in range(0, len(status)):
-            status[i]=True
-    elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
-        for i in range(0, len(status)):
-            status[i]=False
+    
     else:
         # print('Channel: %s' % (channel))
         for i in range(0, CHANNEL_COUNT):
@@ -152,15 +172,38 @@ while True:
             resetcounts[i]+=1
             if debug: print('reset' % resetcounts[i])
             if (resetcounts[i]>=resetlength): resetcounts[i]=0
-
-    # Update the LED statuses if they have changed
-    for i in range(0, CHANNEL_COUNT):
-        print('%s, %s' % (laststatus[i], status[i]))
-        if laststatus[i] != status[i]:
-            if status[i]:
-                turn_on_led(i)
-            else:
-                turn_off_led(i)
-            laststatus[i] = status[i]
+    if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
+        already_on = check_statuses(status)
+        if not already_on:
+            for i in range(0, CHANNEL_COUNT):
+                print('Channel %s: %s' % (i + 1, 'ON'))
+                laststatus[i] = True
+                status[i] = True
+            print('---------------------')
+            all_on()
+        
+    elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
+        already_off = check_statuses(status, False)
+        if not already_off:
+            for i in range(0, CHANNEL_COUNT):
+                print('Channel %s: %s' % (i + 1, 'OFF'))
+                laststatus[i] = False
+                status[i] = False
+            print('---------------------')
+            all_off()
+    elif frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
+        # Update the LED statuses if they have changed
+        if laststatus != status:
+            for i in range(0, CHANNEL_COUNT):
+                print('Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
+                if laststatus[i] != status[i]:
+                    if status[i]:
+                        turn_on_led(i)
+                    else:
+                        turn_off_led(i)
+                    laststatus[i] = status[i]
+            print('---------------------')
+    else:
+        None
             
       
