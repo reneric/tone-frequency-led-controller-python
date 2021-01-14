@@ -119,7 +119,7 @@ def turn_on_led(led):
 
 def turn_off_led(led):
     if debug: print('turn_off_led %s' % led)
-    for i in range(1000, 0, -LED_DIM_SPEED * 10):
+    for i in range(1000, 0, -LED_DIM_SPEED):
         pca.channels[led].duty_cycle = i
 onprocesses=[]
 offprocesses=[]
@@ -128,16 +128,16 @@ def all_on():
         p = Process(target=turn_on_led, args=(channel,))
         onprocesses.append(p)
         p.start()
-    for t in onprocesses:
-        t.join()
+    # for t in onprocesses:
+    #     t.join()
 
 def all_off():
     for channel in range(0, CHANNEL_COUNT):
         p = Process(target=turn_off_led, args=(channel,))
         offprocesses.append(p)
         p.start()
-    for t in offprocesses:
-        t.join()
+    # for t in offprocesses:
+    #     t.join()
 
 while True:
     frequency = get_freq()
