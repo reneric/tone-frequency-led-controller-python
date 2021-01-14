@@ -26,7 +26,7 @@ triggerlength=8
 # How many false 46ms blips before we declare the alarm is not ringing
 resetlength=10
 # Enable debug output
-debug=False
+debug=
 # The frequency in which the channels begin (Hz)
 CHANNEL_START=1100
 # The number of channels connected
@@ -119,7 +119,7 @@ def turn_on_led(led):
 
 def turn_off_led(led):
     if debug: print('turn_off_led %s' % led)
-    for i in range(0xffff, 0, -LED_DIM_SPEED):
+    for i in range(0xffff, 0, -LED_DIM_SPEED * 10):
         pca.channels[led].duty_cycle = i
 onprocesses=[]
 offprocesses=[]
