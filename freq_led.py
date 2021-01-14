@@ -119,7 +119,7 @@ def turn_on_led(led):
 
 def turn_off_led(led):
     if debug: print('turn_off_led %s' % led)
-    for i in range(1000, 0, -LED_DIM_SPEED):
+    for i in range(0xffff, 0, -LED_DIM_SPEED):
         pca.channels[led].duty_cycle = i
 onprocesses=[]
 offprocesses=[]
