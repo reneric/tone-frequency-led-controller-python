@@ -1,14 +1,14 @@
 # Tone Frequency LED Controller
 ## Setup
 ### Enable I2C Interface
-Run the following command to launch the raspi-config utility. Select “Interfacing Options”
+Run the following command to launch the raspi-config utility. Select “Interfacing Options”:
 ```
   $ sudo raspi-config
 ```
-1. Highlight the “I2C” option and activate “<Select>”.
-2. Select and activate “<Yes>” :
-3. Highlight and activate “<Ok>” :
-4. When prompted to reboot highlight and activate “<Yes>” :
+1. Highlight the “I2C” option and activate “\<Select\>”
+2. Select and activate “\<Yes\>” 
+3. Highlight and activate “\<Ok\>” 
+4. When prompted to reboot highlight and activate “\<Yes\>” 
 5. The Raspberry Pi will reboot and the interface will be enabled.
 
 #### Configure I2C
