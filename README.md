@@ -23,3 +23,17 @@
 
   $ git clone https://github.com/reneric/tone-frequency-led-controller-python.git
 ```
+
+## Run at startup
+In order for the program to run automatically at boot, we'll need to edit the file /etc/rc.local
+### Run the code below to edit rc.local
+```
+  
+  $ sudo nano /etc/rc.local
+```
+### Add the following line above the exit
+```
+  ...
+  sudo python /home/pi/tone-frequency-led-controller-python/freq_led.py &
+  exit 0
+```

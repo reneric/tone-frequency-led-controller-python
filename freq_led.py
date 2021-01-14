@@ -11,16 +11,12 @@ import adafruit_pca9685
 i2c = busio.I2C(board.SCL, board.SDA)
 pca = adafruit_pca9685.PCA9685(i2c)
 
-pca.frequency = 5000
-
-
+# Set the PWM frequency
+pca.frequency = 500
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-
-# p = GPIO.PWM(13, 100)
-# p.start(0)
 
 # Margin of error
 BANDWIDTH = 10
@@ -36,7 +32,8 @@ CHANNEL_START=1100
 CHANNEL_COUNT=5
 # The size of each channel (Hz)
 CHANNEL_SIZE=100
-
+# LED Dim speed
+LED_DIM_SPEED=100
 
 
 # Set up sampler
@@ -106,13 +103,12 @@ def get_freq():
 
 def turn_on_led(led):
     print('turn_on_led %s' % led)
-    # pca.channels[led].duty_cycle = 0xffff
-    for i in range(0, 1024):
+    for i in range(0, 0xffff, LED_DIM_SPEED):
         pca.channels[led].duty_cycle = i
 
 def turn_off_led(led):
     print('turn_off_led %s' % led)
-    for i in range(0xffff, 0, -1000):
+    for i in range(0xffff, 0, -LED_DIM_SPEED):
         pca.channels[led].duty_cycle = i
 
 
@@ -154,6 +150,7 @@ while True:
             if debug: print('reset' % resetcounts[i])
             if (resetcounts[i]>=resetlength): resetcounts[i]=0
 
+    # Update the LED statuses if they have changed
     for i in range(0, CHANNEL_COUNT):
         print('%s, %s' % (laststatus[i], status[i]))
         if laststatus[i] != status[i]:
