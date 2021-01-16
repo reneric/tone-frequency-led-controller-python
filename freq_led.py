@@ -23,9 +23,9 @@ GPIO.setwarnings(False)
 
 # Arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-v', dest='verbose', action="store_true", default=False)
-parser.add_argument('-d', dest='debug', action="store_true", default=False)
-parser.add_argument('-ds', dest='dimmer', action="store", default=0.4, type=float)
+parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", default=False, help="Verbose logging")
+parser.add_argument('-d', '--debug', dest='debug', action="store_true", default=False, help="Show debug logs")
+parser.add_argument('-ds', '--dimmer-speed', dest='dimmer', action="store_const", default=0.4, type=float, help="LED Dimmer speed")
 args = parser.parse_args()
 
 
@@ -40,13 +40,13 @@ debug=args.debug
 # Enable verbose output
 verbose=args.verbose
 # The frequency in which the channels begin (Hz)
-CHANNEL_START=300
+CHANNEL_START=1100
 # The number of channels connected
 CHANNEL_COUNT=16
 # The size of each channel frequency block (Hz)
 CHANNEL_SIZE=100
 # The frequency block for the "All On" command
-ALL_ON_FREQ=1700
+ALL_ON_FREQ=700
 # The "All Off" frequency range will be the next block of frequencies after the "All On" block
 ALL_OFF_FREQ=ALL_ON_FREQ+CHANNEL_SIZE
 # LED Dim speed
