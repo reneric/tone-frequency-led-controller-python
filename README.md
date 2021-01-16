@@ -1,4 +1,17 @@
 # Tone Frequency LED Controller
+
+
+## Usage
+```bash
+usage: python /home/pi/tone-frequency-led-controller-python/freq_led.py [-v] [-d] [-ds 1]
+
+Options:
+  --verbose, -v          Enable verbose logging               [boolean]
+  --debug, -d            Enable debug logs                    [boolean]
+  --dimmer-speed, -ds    Enable debug logs                    [integer]
+  --help                 Show help    
+```
+
 ## Raspberry Pi OS
 Download and install [Raspberry Pi Imager](https://www.raspberrypi.org/software/) to a computer with an SD card reader.
 
@@ -90,15 +103,4 @@ Put your command at the bottom of ‘/home/pi/.bashrc’:
 Go to the last line of the script and add:
 ```bash
   $ python /home/pi/tone-frequency-led-controller-python/freq_led.py &
-```
-
-## Usage
-```bash
-usage: python /home/pi/tone-frequency-led-controller-python/freq_led.py [-v] [-d] [-ds 1]
-
-Options:
-  --verbose, -v          Enable verbose logging               [boolean]
-  --debug, -d            Enable debug logs                    [boolean]
-  --dimmer-speed, -ds    Enable debug logs                    [integer]
-  --help                 Show help    
 ```
