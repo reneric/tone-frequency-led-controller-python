@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 import pyaudio
-from multiprocessing import Process
+from multiprocessing import Process, Pool
 from numpy import zeros,linspace,short,fromstring,hstack,transpose,log,frombuffer
 from scipy import fft
 from time import sleep
 import RPi.GPIO as GPIO
 import board
 import busio
+import os
 import adafruit_pca9685
 import sys
 import argparse
-
+import time
 i2c = busio.I2C(board.SCL, board.SDA)
 pca = adafruit_pca9685.PCA9685(i2c)
 
@@ -39,14 +40,18 @@ debug=args.debug
 # Enable verbose output
 verbose=args.verbose
 # The frequency in which the channels begin (Hz)
-CHANNEL_START=1100
+CHANNEL_START=300
 # The number of channels connected
 CHANNEL_COUNT=16
-# The size of each channel (Hz)
+# The size of each channel frequency block (Hz)
 CHANNEL_SIZE=100
+# The frequency block for the "All On" command
+ALL_ON_FREQ=1700
+# The "All Off" frequency range will be the next block of frequencies after the "All On" block
+ALL_OFF_FREQ=ALL_ON_FREQ+CHANNEL_SIZE
 # LED Dim speed
 LED_DIM_SPEED_SECONDS=args.dimmer
-LED_DIM_SPEED=round((0.000671397/LED_DIM_SPEED_SECONDS)*65535)
+LED_DIM_SPEED=round((0.01133/LED_DIM_SPEED_SECONDS)*10000)
 # Set up sampler
 NUM_SAMPLES = 2048
 SAMPLING_RATE = 44100
@@ -59,8 +64,7 @@ _stream = pa.open(format=pyaudio.paInt16,
 print("Frequency detector LED controller working. Press CTRL-C to quit.")
 print("LED dim speed: %s seconds" % args.dimmer)
 if verbose: print("LED DIMMER: %s" % LED_DIM_SPEED)
-ALL_ON_FREQ=700
-ALL_OFF_FREQ=800
+
 
 channelhitcounts=[]
 resetcounts=[]
@@ -123,110 +127,128 @@ def get_freq():
         return which*SAMPLING_RATE/NUM_SAMPLES
 
 
-def turn_on_led(led):
+def turn_on_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_on_led %s' % led)
-    for i in range(0, 0xffff, LED_DIM_SPEED):
+    start = time.time()
+    for i in range(0, 10000, speed):
         pca.channels[led].duty_cycle = i
+    print(time.time() - start)
 
-def turn_off_led(led):
+def turn_off_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_off_led %s' % led)
-    for i in reversed(range(0, 0xffff, LED_DIM_SPEED)):
+    for i in reversed(range(0, 10000, speed)):
         pca.channels[led].duty_cycle = i
 
 
 def all_on(affected_channels=[]):
     processes=[]
+    start = time.time()
+    print('LED_DIM_SPEED:',LED_DIM_SPEED)
+    dim_speed = LED_DIM_SPEED if len(affected_channels) == CHANNEL_COUNT else LED_DIM_SPEED - (LED_DIM_SPEED - round(LED_DIM_SPEED/len(affected_channels or 1)))
+    print(dim_speed)
     for channel in affected_channels:
-        p = Process(target=turn_on_led, args=(channel,))
+        p = Process(target=turn_on_led, args=(channel,dim_speed,))
         processes.append(p)
         p.start()
     for t in processes:
         t.join()
+    print('total: ', time.time() - start)
 
 def all_off(affected_channels=[]):
     processes=[]
+    start = time.time()
+    print('LED_DIM_SPEED:',LED_DIM_SPEED)
+    dim_speed = LED_DIM_SPEED if len(affected_channels) == CHANNEL_COUNT else LED_DIM_SPEED - (LED_DIM_SPEED - round(LED_DIM_SPEED/len(affected_channels or 1)))
+    print(dim_speed)
     for channel in affected_channels:
-        p = Process(target=turn_off_led, args=(channel,))
+        p = Process(target=turn_off_led, args=(channel,dim_speed,))
         processes.append(p)
         p.start()
     for t in processes:
         t.join()
+    print('total: ', time.time() - start)
 
 while True:
-    frequency = round(get_freq())
-    
-    # If frequency is within the LED single channel range
-    if frequency > CHANNEL_START and frequency < max_freq:
-        channel=determine_channel_num(frequency)
-        channel_index=channel-1
+    try:
+        frequency = round(get_freq())
+        if debug: print('%sHz' % frequency)
 
-        if channel:
-            if debug: print('%sHz' % frequency)
-            channelhitcounts[channel_index]+=1
-            resetcounts[channel_index]=0
-            if (channelhitcounts[channel_index]>=triggerlength):
-                channelhitcounts[channel_index]=0
+        # If frequency is within the LED single channel range
+        if frequency > CHANNEL_START and frequency < max_freq:
+            channel=determine_channel_num(frequency)
+            channel_index=channel-1
+
+            if channel:
+                if debug: print('%sHz' % frequency)
+                channelhitcounts[channel_index]+=1
                 resetcounts[channel_index]=0
-                if debug: print('\nLED %s\n' % (channel))
-                status[channel_index]=frequency < channel_start_freqs[channel_index] + 50
+                if (channelhitcounts[channel_index]>=triggerlength):
+                    channelhitcounts[channel_index]=0
+                    resetcounts[channel_index]=0
+                    if debug: print('\nLED %s\n' % (channel))
+                    
+                    # Set the status to ON if the frequency is in the first have of the channel range. Otherwise, turn it off
+                    status[channel_index]=frequency < channel_start_freqs[channel_index] + (CHANNEL_SIZE/2)
+            else:
+                for i in range(0, CHANNEL_COUNT):
+                    channelhitcounts[i]=0
+                    resetcounts[i]+=1
+                    if (resetcounts[i]>=resetlength): resetcounts[i]=0
+                
         else:
             for i in range(0, CHANNEL_COUNT):
                 channelhitcounts[i]=0
                 resetcounts[i]+=1
-                # if debug: print('resetcount: %s' % resetcounts[i])
                 if (resetcounts[i]>=resetlength): resetcounts[i]=0
-              
-              
-    
-    else:
-        for i in range(0, CHANNEL_COUNT):
-            channelhitcounts[i]=0
-            resetcounts[i]+=1
-            # if debug: print('resetcount: %s' % resetcounts[i])
-            if (resetcounts[i]>=resetlength): resetcounts[i]=0
-    
-    
-    # All On
-    if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
-        already_on = check_statuses(status)
-        affected_channels = []
-        if not already_on:
-            for i in range(0, CHANNEL_COUNT):
-                if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
-                # Only turn ON lights if they are currently OFF
-                if not status[i]: affected_channels.append(i)
-                laststatus[i] = True
-                status[i] = True
-            if verbose: print('---------------------')
-            all_on(affected_channels)
-    
-    # All Off
-    if frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
-        already_off = check_statuses(status, False)
-        affected_channels = []
-        if not already_off:
-            for i in range(0, CHANNEL_COUNT):
-                if verbose: print('Channel %s: %s' % (i + 1, 'OFF'))
-                # Only turn OFF lights if they are currently ON
-                if status[i]: affected_channels.append(i)
-                laststatus[i] = False
-                status[i] = False
-            if verbose: print('---------------------')
-            all_off(affected_channels)
-    
-    # If the frequency is greater than the two all on/off channels
-    if frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
-        # Update the LED statuses if they have changed
-        if laststatus != status:
-            for i in range(0, CHANNEL_COUNT):
-                if verbose: print('Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
-                if laststatus[i] != status[i]:
-                    if status[i]:
-                        turn_on_led(i)
-                    else:
-                        turn_off_led(i)
-                    laststatus[i] = status[i]
-            if verbose: print('---------------------')
-
-            
+        
+        
+        # All On
+        if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
+            already_on = check_statuses(status)
+            affected_channels = []
+            if not already_on:
+                for i in range(0, CHANNEL_COUNT):
+                    if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
+                    # Only turn ON lights if they are currently OFF
+                    if not status[i]: affected_channels.append(i)
+                    laststatus[i] = True
+                    status[i] = True
+                if verbose: print('---------------------')
+                all_on(affected_channels)
+        
+        # All Off
+        if frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
+            already_off = check_statuses(status, False)
+            affected_channels = []
+            if not already_off:
+                for i in range(0, CHANNEL_COUNT):
+                    if verbose: print('Channel %s: %s' % (i + 1, 'OFF'))
+                    # Only turn OFF lights if they are currently ON
+                    if status[i]: affected_channels.append(i)
+                    laststatus[i] = False
+                    status[i] = False
+                if verbose: print('---------------------')
+                all_off(affected_channels)
+        
+        # If the frequency is greater than the two all on/off channels
+        if frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
+            # Update the LED statuses if they have changed
+            if laststatus != status:
+                for i in range(0, CHANNEL_COUNT):
+                    if verbose: print('Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
+                    if laststatus[i] != status[i]:
+                        if status[i]:
+                            turn_on_led(i, round(LED_DIM_SPEED/CHANNEL_COUNT))
+                        else:
+                            turn_off_led(i, round(LED_DIM_SPEED/CHANNEL_COUNT))
+                        laststatus[i] = status[i]
+                if verbose: print('---------------------')
+    except KeyboardInterrupt:
+        print('Interrupted')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
+    except:
+        print('Error')            
       
