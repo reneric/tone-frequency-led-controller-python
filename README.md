@@ -3,7 +3,7 @@
 
 ## Usage
 ```bash
-usage: python /home/pi/tone-frequency-led-controller-python/freq_led.py [-v] [-d] [-ds 1]
+Usage: python freq_led.py [-v] [-d] [-ds=1]
 
 Options:
   --verbose, -v          Enable verbose logging               [boolean]
