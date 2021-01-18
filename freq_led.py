@@ -26,6 +26,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", default=False, help="Enable verbose logging")
 parser.add_argument('-d', '--debug', dest='debug', action="store_true", default=False, help="Enable debug logs")
 parser.add_argument('-ds', '--dimmer-speed', dest='dimmer', action="store", default=0.4, type=float, help="LED Dimmer speed")
+
 args = parser.parse_args()
 
 

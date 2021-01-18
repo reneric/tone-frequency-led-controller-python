@@ -113,4 +113,8 @@ unicornhathd==0.0.4
 urllib3==1.24.1
 webencodings==0.5.1
 Werkzeug==0.14.1
+<<<<<<< HEAD
 wrapt==1.10.11
+=======
+wrapt==1.10.11
+>>>>>>> 5ad817aa8c87ad1780b67463ecb053695765ac9e
