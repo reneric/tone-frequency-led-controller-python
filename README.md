@@ -69,7 +69,18 @@ Run the following command to launch the raspi-config utility. Select “Interfac
   $ ls /dev/i2c* /dev/spi*
 ```
 
+# Installation
+Clone the project into the `/home/pi` directory
+```bash
+  $ git clone https://github.com/reneric/tone-frequency-led-controller-python.git
+  $ cd tone-frequency-led-controller-python
+  $ pip3 install -r requirements.txt
+```
+
+
 ### Libraries
+**If requirements.txt installed correctly, you do not need to manually install these libraries**
+
 Listed below are all of the libraries and configurations needed to get the RPI setup to run the program.
 ```bash
   $ sudo apt-get update
@@ -89,11 +100,7 @@ Listed below are all of the libraries and configurations needed to get the RPI s
   $ sudo pip3 install scipy
   $ sudo apt-get install libatlas-base-dev
 ```
-## Project code
-Clone the project into the `/home/pi` directory
-```bash
-  $ git clone https://github.com/reneric/tone-frequency-led-controller-python.git
-```
+
 ## Run at startup
 In order for the program to run automatically at boot, we'll need modify the .bashrc file.
 Put your command at the bottom of ‘/home/pi/.bashrc’:
