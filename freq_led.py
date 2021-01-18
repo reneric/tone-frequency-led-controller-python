@@ -23,9 +23,15 @@ GPIO.setwarnings(False)
 
 # Arguments
 parser = argparse.ArgumentParser()
+<<<<<<< HEAD
 parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", default=False, help="Enable verbose logging")
 parser.add_argument('-d', '--debug', dest='debug', action="store_true", default=False, help="Enable debug logs")
 parser.add_argument('-ds', '--dimmer-speed', dest='dimmer', action="store", default=0.4, type=float, help="LED Dimmer speed")
+=======
+parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", default=False, help="Verbose logging")
+parser.add_argument('-d', '--debug', dest='debug', action="store_true", default=False, help="Show debug logs")
+parser.add_argument('-ds', '--dimmer-speed', dest='dimmer', action="store_const", default=0.4, type=float, help="LED Dimmer speed")
+>>>>>>> 33515635072fb9a3de056871ec78ff6ce0a53597
 args = parser.parse_args()
 
 
@@ -138,6 +144,7 @@ def turn_on_led(led, speed=LED_DIM_SPEED):
         pca.channels[led].duty_cycle = i
     print(time.time() - start)
 
+<<<<<<< HEAD
 def turn_off_led(led, speed=LED_DIM_SPEED):
     print('turn_off_led %s: %s' % (led, speed))
     start = time.time()
@@ -151,11 +158,26 @@ def turn_on_led_chunks(led, chunk, speed=LED_DIM_SPEED):
     for i in chunk:
         pca.channels[led].duty_cycle = i
     if debug: print(time.time() - start)
+=======
+def turn_on_led(led, speed=LED_DIM_SPEED):
+    if debug: print('turn_on_led %s' % led)
+    start = time.time()
+    for i in range(0, 10000, speed):
+        pca.channels[led].duty_cycle = i
+    print(time.time() - start)
+
+def turn_off_led(led, speed=LED_DIM_SPEED):
+    if debug: print('turn_off_led %s' % led)
+    for i in reversed(range(0, 10000, speed)):
+        pca.channels[led].duty_cycle = i
+
+>>>>>>> 33515635072fb9a3de056871ec78ff6ce0a53597
 
 def all_on(affected_channels=[]):
     processes=[]
     start = time.time()
     print('LED_DIM_SPEED:',LED_DIM_SPEED)
+<<<<<<< HEAD
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in range(0, 10000, speed):
         if 0 <= CHANNEL_COUNT and 0 in affected_channels: pca.channels[0].duty_cycle = i
@@ -184,12 +206,23 @@ def all_on(affected_channels=[]):
     #         p.start()
     #     for t in processes:
     #         t.join()
+=======
+    dim_speed = LED_DIM_SPEED if len(affected_channels) == CHANNEL_COUNT else LED_DIM_SPEED - (LED_DIM_SPEED - round(LED_DIM_SPEED/len(affected_channels or 1)))
+    print(dim_speed)
+    for channel in affected_channels:
+        p = Process(target=turn_on_led, args=(channel,dim_speed,))
+        processes.append(p)
+        p.start()
+    for t in processes:
+        t.join()
+>>>>>>> 33515635072fb9a3de056871ec78ff6ce0a53597
     print('total: ', time.time() - start)
 
 def all_off(affected_channels=[]):
     processes=[]
     start = time.time()
     print('LED_DIM_SPEED:',LED_DIM_SPEED)
+<<<<<<< HEAD
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in reversed(range(0, 10000, speed)):
         if 0 <= CHANNEL_COUNT and 0 in affected_channels: pca.channels[0].duty_cycle = i
@@ -216,6 +249,16 @@ def all_off(affected_channels=[]):
     #     p.start()
     # for t in processes:
     #     t.join()
+=======
+    dim_speed = LED_DIM_SPEED if len(affected_channels) == CHANNEL_COUNT else LED_DIM_SPEED - (LED_DIM_SPEED - round(LED_DIM_SPEED/len(affected_channels or 1)))
+    print(dim_speed)
+    for channel in affected_channels:
+        p = Process(target=turn_off_led, args=(channel,dim_speed,))
+        processes.append(p)
+        p.start()
+    for t in processes:
+        t.join()
+>>>>>>> 33515635072fb9a3de056871ec78ff6ce0a53597
     print('total: ', time.time() - start)
 
 while True:
