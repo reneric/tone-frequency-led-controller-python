@@ -132,19 +132,85 @@ def chunks(lst, n):
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
 
+def set_all(dc, channels):
+    if (0 <= CHANNEL_COUNT and 0 in channels):
+        pca.channels[0].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (1 <= CHANNEL_COUNT and 1 in channels):
+        pca.channels[1].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (2 <= CHANNEL_COUNT and 2 in channels):
+        pca.channels[2].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (3 <= CHANNEL_COUNT and 3 in channels):
+        pca.channels[3].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (4 <= CHANNEL_COUNT and 4 in channels):
+        pca.channels[4].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (5 <= CHANNEL_COUNT and 5 in channels):
+        pca.channels[5].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (6 <= CHANNEL_COUNT and 6 in channels):
+        pca.channels[6].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (7 <= CHANNEL_COUNT and 7 in channels):
+        pca.channels[7].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (8 <= CHANNEL_COUNT and 8 in channels):
+        pca.channels[8].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (9 <= CHANNEL_COUNT and 9 in channels):
+        pca.channels[9].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (10 <= CHANNEL_COUNT and 10 in channels):
+        pca.channels[10].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (11 <= CHANNEL_COUNT and 11 in channels):
+        pca.channels[11].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (12 <= CHANNEL_COUNT and 12 in channels):
+        pca.channels[12].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (13 <= CHANNEL_COUNT and 13 in channels):
+        pca.channels[13].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (14 <= CHANNEL_COUNT and 14 in channels):
+        pca.channels[14].duty_cycle = dc
+    else:
+        sleep(0.0005)
+    if (15 <= CHANNEL_COUNT and 15 in channels):
+        pca.channels[15].duty_cycle = dc
+    else:
+        sleep(0.0005)
+
 def turn_on_led(led, speed=LED_DIM_SPEED):
-    print('turn_on_led %s: %s' % (led, speed))
+    if debug: print('turn_on_led %s: %s' % (led, speed))
     start = time.time()
     for i in range(0, 10000, speed):
         pca.channels[led].duty_cycle = i
-    print(time.time() - start)
+    print('LED %s: ON - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def turn_off_led(led, speed=LED_DIM_SPEED):
-    print('turn_off_led %s: %s' % (led, speed))
+    if debug: print('turn_off_led %s: %s' % (led, speed))
     start = time.time()
     for i in reversed(range(0, 10000, speed)):
         pca.channels[led].duty_cycle = i
-    print(time.time() - start)
+    print('LED %s: OFF - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def turn_on_led_chunks(led, chunk, speed=LED_DIM_SPEED):
     if debug: print('turn_on_led %s: %s' % (led, speed))
@@ -159,33 +225,8 @@ def all_on(affected_channels=[]):
     print('LED_DIM_SPEED:',LED_DIM_SPEED)
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in range(0, 10000, speed):
-        if 0 <= CHANNEL_COUNT and 0 in affected_channels: pca.channels[0].duty_cycle = i
-        if 1 <= CHANNEL_COUNT and 1 in affected_channels: pca.channels[1].duty_cycle = i
-        if 2 <= CHANNEL_COUNT and 2 in affected_channels: pca.channels[2].duty_cycle = i
-        if 3 <= CHANNEL_COUNT and 3 in affected_channels: pca.channels[3].duty_cycle = i
-        if 4 <= CHANNEL_COUNT and 4 in affected_channels: pca.channels[4].duty_cycle = i
-        if 5 <= CHANNEL_COUNT and 5 in affected_channels: pca.channels[5].duty_cycle = i
-        if 6 <= CHANNEL_COUNT and 6 in affected_channels: pca.channels[6].duty_cycle = i
-        if 7 <= CHANNEL_COUNT and 7 in affected_channels: pca.channels[7].duty_cycle = i
-        if 8 <= CHANNEL_COUNT and 8 in affected_channels: pca.channels[8].duty_cycle = i
-        if 9 <= CHANNEL_COUNT and 9 in affected_channels: pca.channels[9].duty_cycle = i
-        if 10 <= CHANNEL_COUNT and 10 in affected_channels: pca.channels[10].duty_cycle = i
-        if 11 <= CHANNEL_COUNT and 11 in affected_channels: pca.channels[11].duty_cycle = i
-        if 12 <= CHANNEL_COUNT and 12 in affected_channels: pca.channels[12].duty_cycle = i
-        if 13 <= CHANNEL_COUNT and 13 in affected_channels: pca.channels[13].duty_cycle = i
-        if 14 <= CHANNEL_COUNT and 14 in affected_channels: pca.channels[14].duty_cycle = i
-        if 15 <= CHANNEL_COUNT and 15 in affected_channels: pca.channels[15].duty_cycle = i
-    # dim_speed = LED_DIM_SPEED if len(affected_channels) == CHANNEL_COUNT else abs(LED_DIM_SPEED - round(CHANNEL_COUNT - len(affected_channels or 1))*10)
-    # r = list(chunks(range(0, 10000, dim_speed), 100))
-    # print(dim_speed)
-    # for chunk in r:
-    #     for channel in affected_channels:
-    #         p = Process(target=turn_on_led_chunks, args=(channel, chunk, dim_speed,))
-    #         processes.append(p)
-    #         p.start()
-    #     for t in processes:
-    #         t.join()
-    print('total: ', time.time() - start)
+        set_all(i, affected_channels)
+    print('total: ', str(round(time.time() - start, 2)))
 
 def all_off(affected_channels=[]):
     processes=[]
@@ -193,31 +234,8 @@ def all_off(affected_channels=[]):
     print('LED_DIM_SPEED:',LED_DIM_SPEED)
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in reversed(range(0, 10000, speed)):
-        if 0 <= CHANNEL_COUNT and 0 in affected_channels: pca.channels[0].duty_cycle = i
-        if 1 <= CHANNEL_COUNT and 1 in affected_channels: pca.channels[1].duty_cycle = i
-        if 2 <= CHANNEL_COUNT and 2 in affected_channels: pca.channels[2].duty_cycle = i
-        if 3 <= CHANNEL_COUNT and 3 in affected_channels: pca.channels[3].duty_cycle = i
-        if 4 <= CHANNEL_COUNT and 4 in affected_channels: pca.channels[4].duty_cycle = i
-        if 5 <= CHANNEL_COUNT and 5 in affected_channels: pca.channels[5].duty_cycle = i
-        if 6 <= CHANNEL_COUNT and 6 in affected_channels: pca.channels[6].duty_cycle = i
-        if 7 <= CHANNEL_COUNT and 7 in affected_channels: pca.channels[7].duty_cycle = i
-        if 8 <= CHANNEL_COUNT and 8 in affected_channels: pca.channels[8].duty_cycle = i
-        if 9 <= CHANNEL_COUNT and 9 in affected_channels: pca.channels[9].duty_cycle = i
-        if 10 <= CHANNEL_COUNT and 10 in affected_channels: pca.channels[10].duty_cycle = i
-        if 11 <= CHANNEL_COUNT and 11 in affected_channels: pca.channels[11].duty_cycle = i
-        if 12 <= CHANNEL_COUNT and 12 in affected_channels: pca.channels[12].duty_cycle = i
-        if 13 <= CHANNEL_COUNT and 13 in affected_channels: pca.channels[13].duty_cycle = i
-        if 14 <= CHANNEL_COUNT and 14 in affected_channels: pca.channels[14].duty_cycle = i
-        if 15 <= CHANNEL_COUNT and 15 in affected_channels: pca.channels[15].duty_cycle = i
-    # dim_speed = LED_DIM_SPEED if len(affected_channels) == CHANNEL_COUNT else abs(LED_DIM_SPEED - round(CHANNEL_COUNT - len(affected_channels or 1))*10)
-    # print(dim_speed)
-    # for channel in affected_channels:
-    #     p = Process(target=turn_off_led, args=(channel,dim_speed,))
-    #     processes.append(p)
-    #     p.start()
-    # for t in processes:
-    #     t.join()
-    print('total: ', time.time() - start)
+        set_all(i, affected_channels)
+    print('total: ', str(round(time.time() - start, 2)))
 
 while True:
     try:
@@ -301,5 +319,5 @@ while True:
         except SystemExit:
             os._exit(0)
     except:
-        print('Error')            
+        print('Error', sys.exc_info()[0])            
       
