@@ -13,14 +13,17 @@ import sys
 import argparse
 import time
 i2c = busio.I2C(board.SCL, board.SDA)
-pca = adafruit_pca9685.PCA9685(i2c)
 
+
+pca2 = adafruit_pca9685.PCA9685(address=0x40, i2c_bus=i2c)
+pca = adafruit_pca9685.PCA9685(address=0x41, i2c_bus=i2c)
 # Set the PWM frequency
-pca.frequency = 500
+pca.frequency = 1000
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-
+pca2.channels[0].duty_cycle = 2000
+pca.channels[6].duty_cycle = 1000
 # Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", default=False, help="Enable verbose logging")
@@ -43,7 +46,7 @@ verbose=args.verbose
 # The frequency in which the channels begin (Hz)
 CHANNEL_START=1100
 # The number of channels connected
-CHANNEL_COUNT=16
+CHANNEL_COUNT=32
 # The size of each channel frequency block (Hz)
 CHANNEL_SIZE=100
 # The frequency block for the "All On" command
@@ -52,7 +55,7 @@ ALL_ON_FREQ=700
 ALL_OFF_FREQ=ALL_ON_FREQ+CHANNEL_SIZE
 # LED Dim speed
 LED_DIM_SPEED_SECONDS=args.dimmer
-LED_DIM_SPEED=round((0.01133/LED_DIM_SPEED_SECONDS)*10000)
+LED_DIM_SPEED=round((0.01133/LED_DIM_SPEED_SECONDS)*15000)
 # Set up sampler
 NUM_SAMPLES = 2048
 SAMPLING_RATE = 44100
@@ -133,83 +136,152 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 def set_all(dc, channels):
+    sleep_time = 0.00005
     if (0 <= CHANNEL_COUNT and 0 in channels):
         pca.channels[0].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (1 <= CHANNEL_COUNT and 1 in channels):
         pca.channels[1].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (2 <= CHANNEL_COUNT and 2 in channels):
         pca.channels[2].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (3 <= CHANNEL_COUNT and 3 in channels):
         pca.channels[3].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (4 <= CHANNEL_COUNT and 4 in channels):
         pca.channels[4].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (5 <= CHANNEL_COUNT and 5 in channels):
         pca.channels[5].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (6 <= CHANNEL_COUNT and 6 in channels):
         pca.channels[6].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (7 <= CHANNEL_COUNT and 7 in channels):
         pca.channels[7].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (8 <= CHANNEL_COUNT and 8 in channels):
         pca.channels[8].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (9 <= CHANNEL_COUNT and 9 in channels):
         pca.channels[9].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (10 <= CHANNEL_COUNT and 10 in channels):
         pca.channels[10].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (11 <= CHANNEL_COUNT and 11 in channels):
         pca.channels[11].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (12 <= CHANNEL_COUNT and 12 in channels):
         pca.channels[12].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (13 <= CHANNEL_COUNT and 13 in channels):
         pca.channels[13].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (14 <= CHANNEL_COUNT and 14 in channels):
         pca.channels[14].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
     if (15 <= CHANNEL_COUNT and 15 in channels):
         pca.channels[15].duty_cycle = dc
     else:
-        sleep(0.0005)
+        sleep(sleep_time)
+    if (16 <= CHANNEL_COUNT and 16 in channels):
+        pca2.channels[0].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (17 <= CHANNEL_COUNT and 17 in channels):
+        pca2.channels[1].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (18 <= CHANNEL_COUNT and 18 in channels):
+        pca2.channels[2].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (19 <= CHANNEL_COUNT and 19 in channels):
+        pca2.channels[3].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (20 <= CHANNEL_COUNT and 20 in channels):
+        pca2.channels[4].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (21 <= CHANNEL_COUNT and 21 in channels):
+        pca2.channels[5].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (22 <= CHANNEL_COUNT and 22 in channels):
+        pca2.channels[6].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (23 <= CHANNEL_COUNT and 23 in channels):
+        pca2.channels[7].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (24 <= CHANNEL_COUNT and 24 in channels):
+        pca2.channels[8].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (25 <= CHANNEL_COUNT and 25 in channels):
+        pca2.channels[9].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (26 <= CHANNEL_COUNT and 26 in channels):
+        pca2.channels[10].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (27 <= CHANNEL_COUNT and 27 in channels):
+        pca2.channels[11].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (28 <= CHANNEL_COUNT and 28 in channels):
+        pca2.channels[12].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (29 <= CHANNEL_COUNT and 29 in channels):
+        pca2.channels[13].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (30 <= CHANNEL_COUNT and 30 in channels):
+        pca2.channels[14].duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (31 <= CHANNEL_COUNT and 31 in channels):
+        pca2.channels[15].duty_cycle = dc
+    else:
+        sleep(sleep_time)
 
 def turn_on_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_on_led %s: %s' % (led, speed))
     start = time.time()
-    for i in range(0, 10000, speed):
-        pca.channels[led].duty_cycle = i
-    print('LED %s: ON - %s seconds' % (led, str(round(time.time() - start, 2))))
+    for i in range(0, 30000, speed):
+        if led <= 15: pca.channels[led].duty_cycle = i
+        if led > 15:
+            print(i)
+            pca2.channels[led-16].duty_cycle = i
+    if debug: print('LED %s: ON - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def turn_off_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_off_led %s: %s' % (led, speed))
     start = time.time()
     for i in reversed(range(0, 10000, speed)):
-        pca.channels[led].duty_cycle = i
+        if led <= 15: pca.channels[led].duty_cycle = i
+        if led > 15: pca2.channels[led-16].duty_cycle = i
     print('LED %s: OFF - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def turn_on_led_chunks(led, chunk, speed=LED_DIM_SPEED):
@@ -222,20 +294,20 @@ def turn_on_led_chunks(led, chunk, speed=LED_DIM_SPEED):
 def all_on(affected_channels=[]):
     processes=[]
     start = time.time()
-    print('LED_DIM_SPEED:',LED_DIM_SPEED)
+    if debug: print('LED_DIM_SPEED:',LED_DIM_SPEED)
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in range(0, 10000, speed):
         set_all(i, affected_channels)
-    print('total: ', str(round(time.time() - start, 2)))
+    if debug: print('total: ', str(round(time.time() - start, 2)))
 
 def all_off(affected_channels=[]):
     processes=[]
     start = time.time()
-    print('LED_DIM_SPEED:',LED_DIM_SPEED)
+    if debug: print('LED_DIM_SPEED:',LED_DIM_SPEED)
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in reversed(range(0, 10000, speed)):
         set_all(i, affected_channels)
-    print('total: ', str(round(time.time() - start, 2)))
+    if debug: print('total: ', str(round(time.time() - start, 2)))
 
 while True:
     try:
