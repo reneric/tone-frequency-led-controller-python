@@ -19,6 +19,7 @@ pca = adafruit_pca9685.PCA9685(address=0x40, i2c_bus=i2c)
 pca2 = adafruit_pca9685.PCA9685(address=0x41, i2c_bus=i2c)
 # Set the PWM frequency
 pca.frequency = 1000
+pca2.frequency = 1000
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
