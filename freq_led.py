@@ -23,8 +23,7 @@ pca2.frequency = 1000
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-pca2.channels[0].duty_cycle = 2000
-pca.channels[6].duty_cycle = 1000
+
 # Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", default=False, help="Enable verbose logging")
