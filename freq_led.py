@@ -278,11 +278,9 @@ def set_all(dc, channels):
 def turn_on_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_on_led %s: %s' % (led, speed))
     start = time.time()
-    for i in range(LOW_DUTY_CYCLE, 30000, speed):
+    for i in range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed):
         if led <= 15: pca.channels[led].duty_cycle = i
-        if led > 15:
-            print(i)
-            pca2.channels[led-16].duty_cycle = i
+        if led > 15: pca2.channels[led-16].duty_cycle = i
     if debug: print('LED %s: ON - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def turn_off_led(led, speed=LED_DIM_SPEED):
@@ -291,6 +289,8 @@ def turn_off_led(led, speed=LED_DIM_SPEED):
     for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
         if led <= 15: pca.channels[led].duty_cycle = i
         if led > 15: pca2.channels[led-16].duty_cycle = i
+    if led <= 15: pca.channels[led].duty_cycle = 0
+    if led > 15: pca2.channels[led-16].duty_cycle = 0
     print('LED %s: OFF - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def turn_on_led_chunks(led, chunk, speed=LED_DIM_SPEED):
