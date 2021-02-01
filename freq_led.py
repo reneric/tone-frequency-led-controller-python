@@ -29,8 +29,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", default=False, help="Enable verbose logging")
 parser.add_argument('-d', '--debug', dest='debug', action="store_true", default=False, help="Enable debug logs")
 parser.add_argument('-ds', '--dimmer-speed', dest='dimmer', action="store", default=0.4, type=float, help="LED Dimmer speed")
-parser.add_argument('-ldc', '--low-duty-cycle', dest='low_duty_cycle', action="store", default=0, type=float, help="Low Duty Cycle")
-parser.add_argument('-hdc', '--high-duty-cycle', dest='high_duty_cycle', action="store", default=10000, type=float, help="Low Duty Cycle")
+parser.add_argument('-ldc', '--low-duty-cycle', dest='low_duty_cycle', action="store", default=0, type=int, help="Low Duty Cycle")
+parser.add_argument('-hdc', '--high-duty-cycle', dest='high_duty_cycle', action="store", default=10000, type=int, help="Low Duty Cycle")
 
 args = parser.parse_args()
 
@@ -47,8 +47,10 @@ debug=args.debug
 verbose=args.verbose
 # Low Duty Cycle
 LOW_DUTY_CYCLE=args.low_duty_cycle
+print('LOW_DUTY_CYCLE', LOW_DUTY_CYCLE)
 # High Duty Cycle
 HIGH_DUTY_CYCLE=args.high_duty_cycle
+print('HIGH_DUTY_CYCLE', HIGH_DUTY_CYCLE)
 # The frequency in which the channels begin (Hz)
 CHANNEL_START=1100
 # The number of channels connected
