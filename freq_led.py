@@ -281,7 +281,7 @@ def turn_on_led(led, speed=LED_DIM_SPEED):
     for i in range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed):
         if led <= 15: pca.channels[led].duty_cycle = i
         if led > 15: pca2.channels[led-16].duty_cycle = i
-    if debug: print('LED %s: ON - %s seconds' % (led, str(round(time.time() - start, 2))))
+    if verbose: print('LED %s: ON - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def turn_off_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_off_led %s: %s' % (led, speed))
@@ -303,11 +303,11 @@ def turn_on_led_chunks(led, chunk, speed=LED_DIM_SPEED):
 def all_on(affected_channels=[]):
     processes=[]
     start = time.time()
-    if debug: print('LED_DIM_SPEED:',LED_DIM_SPEED)
+    if verbose: print('LED_DIM_SPEED:',LED_DIM_SPEED)
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed):
         set_all(i, affected_channels)
-    if debug: print('total: ', str(round(time.time() - start, 2)))
+    if verbose: print('total: ', str(round(time.time() - start, 2)))
 
 def all_off(affected_channels=[]):
     processes=[]
@@ -319,7 +319,7 @@ def all_off(affected_channels=[]):
     for channel in affected_channels:
         if channel <= 15: pca.channels[channel].duty_cycle = 0
         if channel > 15: pca2.channels[channel-16].duty_cycle = 0
-    if debug: print('total: ', str(round(time.time() - start, 2)))
+    if verbose: print('total: ', str(round(time.time() - start, 2)))
 
 while True:
     try:
