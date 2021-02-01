@@ -4,6 +4,7 @@ from multiprocessing import Process, Pool
 from numpy import zeros,linspace,short,fromstring,hstack,transpose,log,frombuffer
 from scipy import fft
 from time import sleep
+import math
 import RPi.GPIO as GPIO
 import board
 import busio
@@ -15,11 +16,12 @@ import time
 i2c = busio.I2C(board.SCL, board.SDA)
 
 
-pca = adafruit_pca9685.PCA9685(address=0x40, i2c_bus=i2c)
+pca1 = adafruit_pca9685.PCA9685(address=0x40, i2c_bus=i2c)
 pca2 = adafruit_pca9685.PCA9685(address=0x41, i2c_bus=i2c)
 # Set the PWM frequency
-pca.frequency = 1000
+pca1.frequency = 1000
 pca2.frequency = 1000
+pcas = [pca1, pca2]
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
@@ -123,6 +125,14 @@ def determine_channel_num(fq):
             channel=i+1
     return channel
 
+def get_pca(channel):
+    return pcas[math.trunc(channel/16)]
+
+def get_channel(channel):
+    pca = get_pca(channel)
+    pca_channel = channel if channel < 16 else channel - 16
+    return pca.channels[pca_channel]
+
 def get_freq():
     while _stream.get_read_available()< NUM_SAMPLES: sleep(0.01)
     audio_data  = frombuffer(_stream.read(_stream.get_read_available()), dtype=short)[-NUM_SAMPLES:]
@@ -147,161 +157,152 @@ def chunks(lst, n):
 def set_all(dc, channels):
     sleep_time = 0.00005
     if (0 <= CHANNEL_COUNT and 0 in channels):
-        pca.channels[0].duty_cycle = dc
+        get_channel(0).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (1 <= CHANNEL_COUNT and 1 in channels):
-        pca.channels[1].duty_cycle = dc
+        get_channel(1).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (2 <= CHANNEL_COUNT and 2 in channels):
-        pca.channels[2].duty_cycle = dc
+        get_channel(2).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (3 <= CHANNEL_COUNT and 3 in channels):
-        pca.channels[3].duty_cycle = dc
+        get_channel(3).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (4 <= CHANNEL_COUNT and 4 in channels):
-        pca.channels[4].duty_cycle = dc
+        get_channel(4).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (5 <= CHANNEL_COUNT and 5 in channels):
-        pca.channels[5].duty_cycle = dc
+        get_channel(5).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (6 <= CHANNEL_COUNT and 6 in channels):
-        pca.channels[6].duty_cycle = dc
+        get_channel(6).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (7 <= CHANNEL_COUNT and 7 in channels):
-        pca.channels[7].duty_cycle = dc
+        get_channel(7).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (8 <= CHANNEL_COUNT and 8 in channels):
-        pca.channels[8].duty_cycle = dc
+        get_channel(8).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (9 <= CHANNEL_COUNT and 9 in channels):
-        pca.channels[9].duty_cycle = dc
+        get_channel(9).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (10 <= CHANNEL_COUNT and 10 in channels):
-        pca.channels[10].duty_cycle = dc
+        get_channel(10).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (11 <= CHANNEL_COUNT and 11 in channels):
-        pca.channels[11].duty_cycle = dc
+        get_channel(11).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (12 <= CHANNEL_COUNT and 12 in channels):
-        pca.channels[12].duty_cycle = dc
+        get_channel(12).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (13 <= CHANNEL_COUNT and 13 in channels):
-        pca.channels[13].duty_cycle = dc
+        get_channel(13).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (14 <= CHANNEL_COUNT and 14 in channels):
-        pca.channels[14].duty_cycle = dc
+        get_channel(14).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (15 <= CHANNEL_COUNT and 15 in channels):
-        pca.channels[15].duty_cycle = dc
+        get_channel(15).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (16 <= CHANNEL_COUNT and 16 in channels):
-        pca2.channels[0].duty_cycle = dc
+        get_channel(0+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (17 <= CHANNEL_COUNT and 17 in channels):
-        pca2.channels[1].duty_cycle = dc
+        get_channel(1+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (18 <= CHANNEL_COUNT and 18 in channels):
-        pca2.channels[2].duty_cycle = dc
+        get_channel(2+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (19 <= CHANNEL_COUNT and 19 in channels):
-        pca2.channels[3].duty_cycle = dc
+        get_channel(3+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (20 <= CHANNEL_COUNT and 20 in channels):
-        pca2.channels[4].duty_cycle = dc
+        get_channel(4+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (21 <= CHANNEL_COUNT and 21 in channels):
-        pca2.channels[5].duty_cycle = dc
+        get_channel(5+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (22 <= CHANNEL_COUNT and 22 in channels):
-        pca2.channels[6].duty_cycle = dc
+        get_channel(6+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (23 <= CHANNEL_COUNT and 23 in channels):
-        pca2.channels[7].duty_cycle = dc
+        get_channel(7+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (24 <= CHANNEL_COUNT and 24 in channels):
-        pca2.channels[8].duty_cycle = dc
+        get_channel(8+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (25 <= CHANNEL_COUNT and 25 in channels):
-        pca2.channels[9].duty_cycle = dc
+        get_channel(9+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (26 <= CHANNEL_COUNT and 26 in channels):
-        pca2.channels[10].duty_cycle = dc
+        get_channel(10+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (27 <= CHANNEL_COUNT and 27 in channels):
-        pca2.channels[11].duty_cycle = dc
+        get_channel(11+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (28 <= CHANNEL_COUNT and 28 in channels):
-        pca2.channels[12].duty_cycle = dc
+        get_channel(12+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (29 <= CHANNEL_COUNT and 29 in channels):
-        pca2.channels[13].duty_cycle = dc
+        get_channel(13+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (30 <= CHANNEL_COUNT and 30 in channels):
-        pca2.channels[14].duty_cycle = dc
+        get_channel(14+16).duty_cycle = dc
     else:
         sleep(sleep_time)
     if (31 <= CHANNEL_COUNT and 31 in channels):
-        pca2.channels[15].duty_cycle = dc
+        get_channel(15+16).duty_cycle = dc
     else:
         sleep(sleep_time)
 
 def turn_on_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_on_led %s: %s' % (led, speed))
     start = time.time()
+    channel = get_channel(led)
     for i in range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed):
-        if led <= 15: pca.channels[led].duty_cycle = i
-        if led > 15: pca2.channels[led-16].duty_cycle = i
+        channel.duty_cycle = i
     if verbose: print('LED %s: ON - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def turn_off_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_off_led %s: %s' % (led, speed))
     start = time.time()
+    channel = get_channel(led)
     for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
-        if led <= 15: pca.channels[led].duty_cycle = i
-        if led > 15: pca2.channels[led-16].duty_cycle = i
-    if led <= 15: pca.channels[led].duty_cycle = 0
-    if led > 15: pca2.channels[led-16].duty_cycle = 0
+        channel.duty_cycle = i
+    channel.duty_cycle = 0
     print('LED %s: OFF - %s seconds' % (led, str(round(time.time() - start, 2))))
 
-def turn_on_led_chunks(led, chunk, speed=LED_DIM_SPEED):
-    if debug: print('turn_on_led %s: %s' % (led, speed))
-    start = time.time()
-    for i in chunk:
-        pca.channels[led].duty_cycle = i
-    if debug: print(time.time() - start)
-
 def all_on(affected_channels=[]):
-    processes=[]
     start = time.time()
     if verbose: print('LED_DIM_SPEED:',LED_DIM_SPEED)
     speed = LED_DIM_SPEED-CHANNEL_COUNT
@@ -310,15 +311,13 @@ def all_on(affected_channels=[]):
     if verbose: print('total: ', str(round(time.time() - start, 2)))
 
 def all_off(affected_channels=[]):
-    processes=[]
     start = time.time()
     if debug: print('LED_DIM_SPEED:',LED_DIM_SPEED)
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
         set_all(i, affected_channels)
-    for channel in affected_channels:
-        if channel <= 15: pca.channels[channel].duty_cycle = 0
-        if channel > 15: pca2.channels[channel-16].duty_cycle = 0
+    for led in affected_channels:
+        get_channel(led).duty_cycle = 0
     if verbose: print('total: ', str(round(time.time() - start, 2)))
 
 while True:
