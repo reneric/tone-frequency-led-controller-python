@@ -299,7 +299,7 @@ def turn_off_led(led, speed=LED_DIM_SPEED):
     channel = get_channel(led)
     for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
         channel.duty_cycle = i
-    channel.duty_cycle = 0
+    # channel.duty_cycle = 0
     print('LED %s: OFF - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def all_on(affected_channels=[]):
@@ -316,8 +316,8 @@ def all_off(affected_channels=[]):
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
         set_all(i, affected_channels)
-    for led in affected_channels:
-        get_channel(led).duty_cycle = 0
+    # for led in affected_channels:
+    #     get_channel(led).duty_cycle = 0
     if verbose: print('total: ', str(round(time.time() - start, 2)))
 
 while True:
