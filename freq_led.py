@@ -316,6 +316,9 @@ def all_off(affected_channels=[]):
     speed = LED_DIM_SPEED-CHANNEL_COUNT
     for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
         set_all(i, affected_channels)
+    for channel in affected_channels:
+        if channel <= 15: pca.channels[channel].duty_cycle = 0
+        if channel > 15: pca2.channels[channel-16].duty_cycle = 0
     if debug: print('total: ', str(round(time.time() - start, 2)))
 
 while True:
