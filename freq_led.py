@@ -30,6 +30,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", default=False, help="Enable verbose logging")
 parser.add_argument('-d', '--debug', dest='debug', action="store_true", default=False, help="Enable debug logs")
 parser.add_argument('-ds', '--dimmer-speed', dest='dimmer', action="store", default=0.4, type=float, help="LED Dimmer speed")
+parser.add_argument('-ldc', '--low-duty-cycle', dest='low_duty_cycle', action="store", default=0, type=float, help="Low Duty Cycle")
+parser.add_argument('-ldc', '--high-duty-cycle', dest='high_duty_cycle', action="store", default=10000, type=float, help="Low Duty Cycle")
 
 args = parser.parse_args()
 
@@ -44,6 +46,10 @@ resetlength=10
 debug=args.debug
 # Enable verbose output
 verbose=args.verbose
+# Low Duty Cycle
+LOW_DUTY_CYCLE=args.low_duty_cycle
+# High Duty Cycle
+HIGH_DUTY_CYCLE=args.high_duty_cycle
 # The frequency in which the channels begin (Hz)
 CHANNEL_START=1100
 # The number of channels connected
@@ -60,6 +66,7 @@ LED_DIM_SPEED=round((0.01133/LED_DIM_SPEED_SECONDS)*15000)
 # Set up sampler
 NUM_SAMPLES = 2048
 SAMPLING_RATE = 44100
+
 pa = pyaudio.PyAudio()
 _stream = pa.open(format=pyaudio.paInt16,
                   channels=1, rate=SAMPLING_RATE,
@@ -270,7 +277,7 @@ def set_all(dc, channels):
 def turn_on_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_on_led %s: %s' % (led, speed))
     start = time.time()
-    for i in range(0, 30000, speed):
+    for i in range(LOW_DUTY_CYCLE, 30000, speed):
         if led <= 15: pca.channels[led].duty_cycle = i
         if led > 15:
             print(i)
@@ -280,7 +287,7 @@ def turn_on_led(led, speed=LED_DIM_SPEED):
 def turn_off_led(led, speed=LED_DIM_SPEED):
     if debug: print('turn_off_led %s: %s' % (led, speed))
     start = time.time()
-    for i in reversed(range(0, 10000, speed)):
+    for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
         if led <= 15: pca.channels[led].duty_cycle = i
         if led > 15: pca2.channels[led-16].duty_cycle = i
     print('LED %s: OFF - %s seconds' % (led, str(round(time.time() - start, 2))))
@@ -297,7 +304,7 @@ def all_on(affected_channels=[]):
     start = time.time()
     if debug: print('LED_DIM_SPEED:',LED_DIM_SPEED)
     speed = LED_DIM_SPEED-CHANNEL_COUNT
-    for i in range(0, 10000, speed):
+    for i in range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed):
         set_all(i, affected_channels)
     if debug: print('total: ', str(round(time.time() - start, 2)))
 
@@ -306,7 +313,7 @@ def all_off(affected_channels=[]):
     start = time.time()
     if debug: print('LED_DIM_SPEED:',LED_DIM_SPEED)
     speed = LED_DIM_SPEED-CHANNEL_COUNT
-    for i in reversed(range(0, 10000, speed)):
+    for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
         set_all(i, affected_channels)
     if debug: print('total: ', str(round(time.time() - start, 2)))
 
