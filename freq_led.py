@@ -12,6 +12,7 @@ import os
 import adafruit_pca9685
 import sys
 import argparse
+import struct
 import time
 i2c = busio.I2C(board.SCL, board.SDA)
 
@@ -107,6 +108,20 @@ for i in range(0,CHANNEL_COUNT):
     max_freq=channel_end_freq
     if verbose: print('Channel %s: Range %sHz - %sHz' % (led, channel_start_freq, channel_end_freq))
 
+
+def cie1931(L):
+    L = L*100.0
+    if L <= 8:
+        return (L/903.3)
+    else:
+        return ((L+16.0)/119.0)**3
+
+INPUT_SIZE=50*LED_DIM_SPEED_SECONDS
+OUTPUT_SIZE=19999
+m16 = lambda x: struct.unpack('H', struct.pack('H', x))[0]
+x = range(LOW_DUTY_CYCLE,int(INPUT_SIZE+1))
+dim_range = [m16(round(cie1931(float(L)/INPUT_SIZE)*OUTPUT_SIZE)) for L in x]
+
 def check_statuses(st, flag=True):  
     chk = True
     for item in st: 
@@ -153,9 +168,9 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
-
+sleep_time = 0.0005
 def set_all(dc, channels):
-    sleep_time = 0.00005
+    
     if (0 <= CHANNEL_COUNT and 0 in channels):
         get_channel(0).duty_cycle = dc
     else:
@@ -284,40 +299,37 @@ def set_all(dc, channels):
         get_channel(15+16).duty_cycle = dc
     else:
         sleep(sleep_time)
-
-def turn_on_led(led, speed=LED_DIM_SPEED):
-    if debug: print('turn_on_led %s: %s' % (led, speed))
+    
+def turn_on_led(led):
+    if debug: print('turn_on_led %s' % (led))
     start = time.time()
     channel = get_channel(led)
-    for i in range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed):
+    for i in dim_range:
         channel.duty_cycle = i
+        sleep(0.02*LED_DIM_SPEED_SECONDS)
     if verbose: print('LED %s: ON - %s seconds' % (led, str(round(time.time() - start, 2))))
 
-def turn_off_led(led, speed=LED_DIM_SPEED):
-    if debug: print('turn_off_led %s: %s' % (led, speed))
+def turn_off_led(led):
+    if debug: print('turn_off_led %s' % (led))
     start = time.time()
     channel = get_channel(led)
-    for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
+    for i in reversed(dim_range):
         channel.duty_cycle = i
+        sleep(0.02*LED_DIM_SPEED_SECONDS)
     # channel.duty_cycle = 0
     print('LED %s: OFF - %s seconds' % (led, str(round(time.time() - start, 2))))
 
 def all_on(affected_channels=[]):
     start = time.time()
-    if verbose: print('LED_DIM_SPEED:',LED_DIM_SPEED)
-    speed = LED_DIM_SPEED-CHANNEL_COUNT
-    for i in range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed):
+
+    for i in dim_range:
         set_all(i, affected_channels)
     if verbose: print('total: ', str(round(time.time() - start, 2)))
 
 def all_off(affected_channels=[]):
     start = time.time()
-    if debug: print('LED_DIM_SPEED:',LED_DIM_SPEED)
-    speed = LED_DIM_SPEED-CHANNEL_COUNT
-    for i in reversed(range(LOW_DUTY_CYCLE, HIGH_DUTY_CYCLE, speed)):
+    for i in reversed(dim_range):
         set_all(i, affected_channels)
-    # for led in affected_channels:
-    #     get_channel(led).duty_cycle = 0
     if verbose: print('total: ', str(round(time.time() - start, 2)))
 
 while True:
@@ -390,9 +402,9 @@ while True:
                     if verbose: print('Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
                     if laststatus[i] != status[i]:
                         if status[i]:
-                            turn_on_led(i, round(LED_DIM_SPEED/CHANNEL_COUNT))
+                            turn_on_led(i)
                         else:
-                            turn_off_led(i, round(LED_DIM_SPEED/CHANNEL_COUNT))
+                            turn_off_led(i)
                         laststatus[i] = status[i]
                 if verbose: print('---------------------')
     except KeyboardInterrupt:
