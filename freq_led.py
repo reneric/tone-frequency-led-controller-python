@@ -84,7 +84,8 @@ if verbose: print("LED DIMMER: %s" % LED_DIM_SPEED)
 
 channelhitcounts=[]
 resetcounts=[]
-clearcounts=[]
+allhitcounts=[]
+allresetcounts=[]
 
 max_freq=0
 channel_start_freqs=[]
@@ -104,7 +105,6 @@ for i in range(0,CHANNEL_COUNT):
     laststatus.append(False)
     channelhitcounts.append(0)
     resetcounts.append(0)
-    clearcounts.append(0)
     max_freq=channel_end_freq
     if verbose: print('Channel %s: Range %sHz - %sHz' % (led, channel_start_freq, channel_end_freq))
 
@@ -121,6 +121,10 @@ OUTPUT_SIZE=19999
 m16 = lambda x: struct.unpack('H', struct.pack('H', x))[0]
 x = range(LOW_DUTY_CYCLE,int(INPUT_SIZE+1))
 dim_range = [m16(round(cie1931(float(L)/INPUT_SIZE)*OUTPUT_SIZE)) for L in x]
+
+def can_trigger(hit_count):
+    return hit_count >= triggerlength
+
 
 def check_statuses(st, flag=True):  
     chk = True
@@ -346,7 +350,7 @@ while True:
                 if debug: print('%sHz' % frequency)
                 channelhitcounts[channel_index]+=1
                 resetcounts[channel_index]=0
-                if (channelhitcounts[channel_index]>=triggerlength):
+                if (can_trigger(channelhitcounts[channel_index])):
                     channelhitcounts[channel_index]=0
                     resetcounts[channel_index]=0
                     if debug: print('\nLED %s\n' % (channel))
@@ -368,34 +372,46 @@ while True:
         
         # All On
         if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
-            already_on = check_statuses(status)
-            affected_channels = []
-            if not already_on:
-                for i in range(0, CHANNEL_COUNT):
-                    if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
-                    # Only turn ON lights if they are currently OFF
-                    if not status[i]: affected_channels.append(i)
-                    laststatus[i] = True
-                    status[i] = True
-                if verbose: print('---------------------')
-                all_on(affected_channels)
+            channelhitcounts[0]+=1
+            resetcounts[0]=0
+            if (can_trigger(allhitcounts[1])):
+                allhitcounts[1]=0
+                resetcounts[1]=0
+            
+                already_on = check_statuses(status)
+                affected_channels = []
+                if not already_on:
+                    for i in range(0, CHANNEL_COUNT):
+                        if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
+                        # Only turn ON lights if they are currently OFF
+                        if not status[i]: affected_channels.append(i)
+                        laststatus[i] = True
+                        status[i] = True
+                    if verbose: print('---------------------')
+                    all_on(affected_channels)
         
         # All Off
         if frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
-            already_off = check_statuses(status, False)
-            affected_channels = []
-            if not already_off:
-                for i in range(0, CHANNEL_COUNT):
-                    if verbose: print('Channel %s: %s' % (i + 1, 'OFF'))
-                    # Only turn OFF lights if they are currently ON
-                    if status[i]: affected_channels.append(i)
-                    laststatus[i] = False
-                    status[i] = False
-                if verbose: print('---------------------')
-                all_off(affected_channels)
+            channelhitcounts[1]+=1
+            resetcounts[1]=0
+            if (can_trigger(allhitcounts[1])):
+                allhitcounts[1]=0
+                resetcounts[1]=0
+
+                already_off = check_statuses(status, False)
+                affected_channels = []
+                if not already_off:
+                    for i in range(0, CHANNEL_COUNT):
+                        if verbose: print('Channel %s: %s' % (i + 1, 'OFF'))
+                        # Only turn OFF lights if they are currently ON
+                        if status[i]: affected_channels.append(i)
+                        laststatus[i] = False
+                        status[i] = False
+                    if verbose: print('---------------------')
+                    all_off(affected_channels)
         
         # If the frequency is greater than the two all on/off channels
-        if frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
+        elif frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
             # Update the LED statuses if they have changed
             if laststatus != status:
                 for i in range(0, CHANNEL_COUNT):
@@ -407,6 +423,11 @@ while True:
                             turn_off_led(i)
                         laststatus[i] = status[i]
                 if verbose: print('---------------------')
+        else:
+            for i in range(0, 2):
+                allhitcounts[i]=0
+                allresetcounts[i]+=1
+                if (allresetcounts[i]>=resetlength): allresetcounts[i]=0
     except KeyboardInterrupt:
         print('Interrupted')
         try:
