@@ -84,8 +84,8 @@ if verbose: print("LED DIMMER: %s" % LED_DIM_SPEED)
 
 channelhitcounts=[]
 resetcounts=[]
-allhitcounts=[]
-allresetcounts=[]
+allhitcounts=[0,0]
+allresetcounts=[0,0]
 
 max_freq=0
 channel_start_freqs=[]
