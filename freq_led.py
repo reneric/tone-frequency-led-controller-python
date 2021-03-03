@@ -374,8 +374,7 @@ while True:
         if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
             allhitcounts[0]+=1
             allresetcounts[0]=0
-            print('allhitcounts[0]', allhitcounts)
-            print('resetcounts[0]', allresetcounts)
+            
             print('can_trigger(allhitcounts[0])', can_trigger(allhitcounts[0]))
             if (can_trigger(allhitcounts[0])):
                 allhitcounts[0]=0
@@ -431,6 +430,8 @@ while True:
                 allhitcounts[i]=0
                 allresetcounts[i]+=1
                 if (allresetcounts[i]>=resetlength): allresetcounts[i]=0
+        print('allhitcounts[0]', allhitcounts)
+        print('resetcounts[0]', allresetcounts)
     except KeyboardInterrupt:
         print('Interrupted')
         try:
