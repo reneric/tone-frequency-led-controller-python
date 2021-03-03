@@ -374,9 +374,6 @@ while True:
         if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
             allhitcounts[0]+=1
             allresetcounts[0]=0
-            print('allhitcounts[0]', allhitcounts[0])
-            print('resetcounts[0]', allresetcounts[0])
-            print('can_trigger(allhitcounts[0])', can_trigger(allhitcounts[0]))
             if (can_trigger(allhitcounts[0])):
                 allhitcounts[0]=0
                 allresetcounts[0]=0
@@ -397,8 +394,6 @@ while True:
         elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
             allhitcounts[1]+=1
             allresetcounts[1]=0
-            print('allhitcounts[1]', allhitcounts[1])
-            print('resetcounts[1]', allresetcounts[1])
             if (can_trigger(allhitcounts[1])):
                 allhitcounts[1]=0
                 allresetcounts[1]=0
@@ -415,8 +410,6 @@ while True:
                     if verbose: print('---------------------')
                     all_off(affected_channels)
         else:
-            print('ELSEallhitcounts[0]', allhitcounts)
-            print('ELSEresetcounts[0]', allresetcounts)
             for i in range(0, 2):
                 allhitcounts[i]=0
                 allresetcounts[i]+=1
