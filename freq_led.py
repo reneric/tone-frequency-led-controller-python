@@ -374,7 +374,8 @@ while True:
         if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
             allhitcounts[0]+=1
             allresetcounts[0]=0
-            
+            print('allhitcounts[0]', allhitcounts[0])
+            print('resetcounts[0]', allresetcounts[0])
             print('can_trigger(allhitcounts[0])', can_trigger(allhitcounts[0]))
             if (can_trigger(allhitcounts[0])):
                 allhitcounts[0]=0
@@ -396,6 +397,8 @@ while True:
         if frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
             allhitcounts[1]+=1
             allresetcounts[1]=0
+            print('allhitcounts[1]', allhitcounts[1])
+            print('resetcounts[1]', allresetcounts[1])
             if (can_trigger(allhitcounts[1])):
                 allhitcounts[1]=0
                 allresetcounts[1]=0
