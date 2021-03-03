@@ -394,7 +394,7 @@ while True:
                     all_on(affected_channels)
         
         # All Off
-        if frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
+        elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
             allhitcounts[1]+=1
             allresetcounts[1]=0
             print('allhitcounts[1]', allhitcounts[1])
@@ -414,9 +414,16 @@ while True:
                         status[i] = False
                     if verbose: print('---------------------')
                     all_off(affected_channels)
+        else:
+            print('ELSEallhitcounts[0]', allhitcounts)
+            print('ELSEresetcounts[0]', allresetcounts)
+            for i in range(0, 2):
+                allhitcounts[i]=0
+                allresetcounts[i]+=1
+                if (allresetcounts[i]>=resetlength): allresetcounts[i]=0
         
         # If the frequency is greater than the two all on/off channels
-        elif frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
+        if frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
             # Update the LED statuses if they have changed
             if laststatus != status:
                 for i in range(0, CHANNEL_COUNT):
@@ -428,14 +435,6 @@ while True:
                             turn_off_led(i)
                         laststatus[i] = status[i]
                 if verbose: print('---------------------')
-        else:
-            print('ELSEallhitcounts[0]', allhitcounts)
-            print('ELSEresetcounts[0]', allresetcounts)
-            for i in range(0, 2):
-                allhitcounts[i]=0
-                allresetcounts[i]+=1
-                if (allresetcounts[i]>=resetlength): allresetcounts[i]=0
-        
     except KeyboardInterrupt:
         print('Interrupted')
         try:
