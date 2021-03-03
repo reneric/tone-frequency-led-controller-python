@@ -376,9 +376,9 @@ while True:
             resetcounts[0]=0
             print('channelhitcounts[0]', channelhitcounts[0])
             print('resetcounts[0]', resetcounts[0])
-            if (can_trigger(allhitcounts[1])):
-                allhitcounts[1]=0
-                resetcounts[1]=0
+            if (can_trigger(allhitcounts[0])):
+                allhitcounts[0]=0
+                resetcounts[0]=0
             
                 already_on = check_statuses(status)
                 affected_channels = []
