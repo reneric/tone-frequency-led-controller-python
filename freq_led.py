@@ -373,13 +373,13 @@ while True:
         # All On
         if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
             allhitcounts[0]+=1
-            resetcounts[0]=0
+            allresetcounts[0]=0
             print('allhitcounts[0]', allhitcounts)
-            print('resetcounts[0]', resetcounts)
+            print('resetcounts[0]', allresetcounts)
             print('can_trigger(allhitcounts[0])', can_trigger(allhitcounts[0]))
             if (can_trigger(allhitcounts[0])):
                 allhitcounts[0]=0
-                resetcounts[0]=0
+                allresetcounts[0]=0
             
                 already_on = check_statuses(status)
                 affected_channels = []
@@ -396,10 +396,10 @@ while True:
         # All Off
         if frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
             allhitcounts[1]+=1
-            resetcounts[1]=0
+            allresetcounts[1]=0
             if (can_trigger(allhitcounts[1])):
                 allhitcounts[1]=0
-                resetcounts[1]=0
+                allresetcounts[1]=0
 
                 already_off = check_statuses(status, False)
                 affected_channels = []
