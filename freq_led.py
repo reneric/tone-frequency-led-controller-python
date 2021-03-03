@@ -429,12 +429,13 @@ while True:
                         laststatus[i] = status[i]
                 if verbose: print('---------------------')
         else:
+            print('ELSEallhitcounts[0]', allhitcounts)
+            print('ELSEresetcounts[0]', allresetcounts)
             for i in range(0, 2):
                 allhitcounts[i]=0
                 allresetcounts[i]+=1
                 if (allresetcounts[i]>=resetlength): allresetcounts[i]=0
-        print('allhitcounts[0]', allhitcounts)
-        print('resetcounts[0]', allresetcounts)
+        
     except KeyboardInterrupt:
         print('Interrupted')
         try:
