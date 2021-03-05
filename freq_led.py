@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import pyaudio
-from multiprocessing import Process, Pool
+from threading import Timer
 from numpy import zeros,linspace,short,fromstring,hstack,transpose,log,frombuffer
 from scipy import fft
 from time import sleep
@@ -11,6 +11,7 @@ import busio
 import os
 import adafruit_pca9685
 import sys
+from datetime import datetime, date
 import argparse
 import struct
 import time
@@ -34,12 +35,14 @@ parser.add_argument('-d', '--debug', dest='debug', action="store_true", default=
 parser.add_argument('-ds', '--dimmer-speed', dest='dimmer', action="store", default=0.4, type=float, help="LED Dimmer speed")
 parser.add_argument('-ldc', '--low-duty-cycle', dest='low_duty_cycle', action="store", default=0, type=int, help="Low Duty Cycle")
 parser.add_argument('-hdc', '--high-duty-cycle', dest='high_duty_cycle', action="store", default=10000, type=int, help="Low Duty Cycle")
+parser.add_argument('-fs', '--failover-seconds', dest='failover_seconds', action="store", default=300, type=int, help="Time to trigger failover state")
 
 args = parser.parse_args()
 
-
+# Time to trigger failover state
+FAILOVER_SECONDS=args.failover_seconds
 # Margin of error
-BANDWIDTH = 10
+BANDWIDTH=10
 # How many 46ms segments before we determine it is a legitimate tone
 triggerlength=8
 # How many false 46ms blips before we declare the alarm is not ringing
@@ -50,10 +53,8 @@ debug=args.debug
 verbose=args.verbose
 # Low Duty Cycle
 LOW_DUTY_CYCLE=args.low_duty_cycle
-print('LOW_DUTY_CYCLE', LOW_DUTY_CYCLE)
 # High Duty Cycle
 HIGH_DUTY_CYCLE=args.high_duty_cycle
-print('HIGH_DUTY_CYCLE', HIGH_DUTY_CYCLE)
 # The frequency in which the channels begin (Hz)
 CHANNEL_START=1100
 # The number of channels connected
@@ -122,9 +123,30 @@ m16 = lambda x: struct.unpack('H', struct.pack('H', x))[0]
 x = range(LOW_DUTY_CYCLE,int(INPUT_SIZE+1))
 dim_range = [m16(round(cie1931(float(L)/INPUT_SIZE)*OUTPUT_SIZE)) for L in x]
 
+def get_failover_seconds(ft):
+    failover_diff = datetime.combine(datetime.now(), ft) - datetime.combine(datetime.now(), datetime.now().time())
+    return abs(failover_diff.total_seconds())
+
 def can_trigger(hit_count):
     return hit_count >= triggerlength
 
+def all_channels():
+    channels = []
+    for i in range(0, CHANNEL_COUNT):
+        channels.append(i)
+    return channels
+
+def left_channels():
+    channels = []
+    for i in range(0, 13):
+        channels.append(i)
+    return channels
+
+def right_channels():
+    channels = []
+    for i in range(13, 26):
+        channels.append(i)
+    return channels
 
 def check_statuses(st, flag=True):  
     chk = True
@@ -172,6 +194,7 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
+
 sleep_time = 0.0005
 def set_all(dc, channels):
     
@@ -336,6 +359,7 @@ def all_off(affected_channels=[]):
         set_all(i, affected_channels)
     if verbose: print('total: ', str(round(time.time() - start, 2)))
 
+failover_time = datetime.now().time()
 while True:
     try:
         frequency = round(get_freq())
@@ -351,6 +375,7 @@ while True:
                 channelhitcounts[channel_index]+=1
                 resetcounts[channel_index]=0
                 if (can_trigger(channelhitcounts[channel_index])):
+                    failover_time = datetime.now().time()
                     channelhitcounts[channel_index]=0
                     resetcounts[channel_index]=0
                     if debug: print('\nLED %s\n' % (channel))
@@ -375,6 +400,7 @@ while True:
             allhitcounts[0]+=1
             allresetcounts[0]=0
             if (can_trigger(allhitcounts[0])):
+                failover_time = datetime.now().time()
                 allhitcounts[0]=0
                 allresetcounts[0]=0
             
@@ -395,6 +421,7 @@ while True:
             allhitcounts[1]+=1
             allresetcounts[1]=0
             if (can_trigger(allhitcounts[1])):
+                failover_time = datetime.now().time()
                 allhitcounts[1]=0
                 allresetcounts[1]=0
 
@@ -414,7 +441,7 @@ while True:
                 allhitcounts[i]=0
                 allresetcounts[i]+=1
                 if (allresetcounts[i]>=resetlength): allresetcounts[i]=0
-        
+
         # If the frequency is greater than the two all on/off channels
         if frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
             # Update the LED statuses if they have changed
@@ -428,6 +455,21 @@ while True:
                             turn_off_led(i)
                         laststatus[i] = status[i]
                 if verbose: print('---------------------')
+        
+        failover_diff = get_failover_seconds(failover_time)
+        if (failover_diff > FAILOVER_SECONDS):
+            already_on = check_statuses(status)
+            affected_channels = []
+            if not already_on:
+                for i in range(0, CHANNEL_COUNT):
+                    if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
+                    # Only turn ON lights if they are currently OFF
+                    if not status[i]: affected_channels.append(i)
+                    laststatus[i] = True
+                    status[i] = True
+            all_on(affected_channels)
+
+
     except KeyboardInterrupt:
         print('Interrupted')
         try:
