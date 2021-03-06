@@ -648,7 +648,8 @@ def all_off(affected_channels=[]):
     if verbose: print('total: ', str(round(time.time() - start, 2)))
 
 def command_all(on_channels=[], off_channels=[]):
-    dim_len = len(dim_range)
+    for i in dim_range:
+        set_all_command(i, on_channels, off_channels)
 
 
 failover_time = datetime.now().time()
@@ -664,7 +665,7 @@ while True:
                 on_channels = []
                 off_channels = []
                 for i in range(0, CHANNEL_COUNT):
-                    if verbose: print('Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
+                    if verbose: print('Group Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
                     if laststatus[i] != status[i]:
                         if status[i]:
                             on_channels.append(i)
@@ -672,6 +673,8 @@ while True:
                             off_channels.append(i)
                         laststatus[i] = status[i]
                 group_mode = False
+                command_all(on_channels, off_channels)
+                print('GROUP MODE OFF')
             group_mode = frequency < 550
             
         # If frequency is within the LED single channel range
