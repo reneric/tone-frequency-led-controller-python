@@ -657,7 +657,7 @@ while True:
     try:
         frequency = round(get_freq())
         if debug and frequency > 10: print('%s Hz' % frequency)
-
+        if group_mode: print('GROUP MODE')
         # If frequency is in group mode
         if frequency > 500 and frequency < 600:
             if frequency > 550 and group_mode:
