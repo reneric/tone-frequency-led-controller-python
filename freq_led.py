@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pyaudio
 from threading import Timer
-from numpy import zeros,linspace,short,fromstring,hstack,transpose,log,frombuffer
+from numpy import zeros,linspace,short,fromstring,hstack,log10,log,frombuffer
 from scipy import fft
 from time import sleep
 import math
@@ -36,9 +36,12 @@ parser.add_argument('-ds', '--dimmer-speed', dest='dimmer', action="store", defa
 parser.add_argument('-ldc', '--low-duty-cycle', dest='low_duty_cycle', action="store", default=0, type=int, help="Low Duty Cycle")
 parser.add_argument('-hdc', '--high-duty-cycle', dest='high_duty_cycle', action="store", default=10000, type=int, help="Low Duty Cycle")
 parser.add_argument('-fs', '--failover-seconds', dest='failover_seconds', action="store", default=300, type=int, help="Time to trigger failover state")
+parser.add_argument('-db', '--decibel-threshold', dest='decibel_threshold', action="store", default=-10, type=int, help="The decibel threshold to gate the audio")
 
 args = parser.parse_args()
 
+# Decibel gate threshold
+DECIBEL_THRESHOLD=args.decibel_threshold
 # Time to trigger failover state
 FAILOVER_SECONDS=args.failover_seconds
 # Margin of error
@@ -174,13 +177,39 @@ def get_channel(channel):
     pca_channel = channel if channel < 16 else channel - 16
     return pca.channels[pca_channel]
 
+Threshold = 10
+
+SHORT_NORMALIZE = (1.0/32768.0)
+swidth = 2
+
+def rms(frame):
+        count = len(frame) / swidth
+        format = "%dh" % (count)
+        shorts = struct.unpack(format, frame)
+
+        sum_squares = 0.0
+        for sample in shorts:
+            n = sample * SHORT_NORMALIZE
+            sum_squares += n * n
+        rms = math.pow(sum_squares / count, 0.5)
+
+        return rms * 1000
+
 def get_freq():
     while _stream.get_read_available()< NUM_SAMPLES: sleep(0.01)
-    audio_data  = frombuffer(_stream.read(_stream.get_read_available()), dtype=short)[-NUM_SAMPLES:]
+    data = _stream.read(_stream.get_read_available())
+    r = rms(data)
+    decibel = 20 * log10(r/20)
+    # if debug: print('%sdB' % str(round(decibel, 1)))
+    if (decibel < DECIBEL_THRESHOLD):
+        return 0
+
+    audio_data  = frombuffer(data, dtype=short)[-NUM_SAMPLES:]
     # Each data point is a signed 16 bit number, so we can normalize by dividing 32*1024
     normalized_data = audio_data / 32768.0
-    intensity = abs(fft.fft(normalized_data))[:NUM_SAMPLES//2]
     
+    intensity = abs(fft.fft(normalized_data))[:NUM_SAMPLES//2]
+
     which = intensity[1:].argmax()+1    # use quadratic interpolation around the max
     if which != len(intensity)-1:
         y0,y1,y2 = log(intensity[which-1:which+2:])
@@ -326,6 +355,265 @@ def set_all(dc, channels):
         get_channel(15+16).duty_cycle = dc
     else:
         sleep(sleep_time)
+
+def set_all_command(dc, on_channels, off_channels):
+    dim_len = len(dim_range)
+    if (0 <= CHANNEL_COUNT and 0 in on_channels):
+        get_channel(0).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (0 <= CHANNEL_COUNT and 0 in off_channels):
+        get_channel(0).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (1 <= CHANNEL_COUNT and 1 in on_channels):
+        get_channel(1).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (1 <= CHANNEL_COUNT and 1 in off_channels):
+        get_channel(1).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (2 <= CHANNEL_COUNT and 2 in on_channels):
+        get_channel(2).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (2 <= CHANNEL_COUNT and 2 in off_channels):
+        get_channel(2).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (3 <= CHANNEL_COUNT and 3 in on_channels):
+        get_channel(3).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (3 <= CHANNEL_COUNT and 3 in off_channels):
+        get_channel(3).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (4 <= CHANNEL_COUNT and 4 in on_channels):
+        get_channel(4).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (4 <= CHANNEL_COUNT and 4 in off_channels):
+        get_channel(4).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (5 <= CHANNEL_COUNT and 5 in on_channels):
+        get_channel(5).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (5 <= CHANNEL_COUNT and 5 in off_channels):
+        get_channel(5).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (6 <= CHANNEL_COUNT and 6 in on_channels):
+        get_channel(6).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (6 <= CHANNEL_COUNT and 6 in off_channels):
+        get_channel(6).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (7 <= CHANNEL_COUNT and 7 in on_channels):
+        get_channel(7).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (7 <= CHANNEL_COUNT and 7 in off_channels):
+        get_channel(7).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (8 <= CHANNEL_COUNT and 8 in on_channels):
+        get_channel(8).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (8 <= CHANNEL_COUNT and 8 in off_channels):
+        get_channel(8).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (9 <= CHANNEL_COUNT and 9 in on_channels):
+        get_channel(9).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (9 <= CHANNEL_COUNT and 9 in off_channels):
+        get_channel(9).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (10 <= CHANNEL_COUNT and 10 in on_channels):
+        get_channel(10).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (10 <= CHANNEL_COUNT and 10 in off_channels):
+        get_channel(10).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (11 <= CHANNEL_COUNT and 11 in on_channels):
+        get_channel(11).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (11 <= CHANNEL_COUNT and 11 in off_channels):
+        get_channel(11).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (12 <= CHANNEL_COUNT and 12 in on_channels):
+        get_channel(12).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (12 <= CHANNEL_COUNT and 12 in off_channels):
+        get_channel(12).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (13 <= CHANNEL_COUNT and 13 in on_channels):
+        get_channel(13).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (13 <= CHANNEL_COUNT and 13 in off_channels):
+        get_channel(13).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (14 <= CHANNEL_COUNT and 14 in on_channels):
+        get_channel(14).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (14 <= CHANNEL_COUNT and 14 in off_channels):
+        get_channel(14).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (15 <= CHANNEL_COUNT and 15 in on_channels):
+        get_channel(15).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (15 <= CHANNEL_COUNT and 15 in off_channels):
+        get_channel(15).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (16 <= CHANNEL_COUNT and 16 in on_channels):
+        get_channel(0+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (16 <= CHANNEL_COUNT and 16 in off_channels):
+        get_channel(0+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (17 <= CHANNEL_COUNT and 17 in on_channels):
+        get_channel(1+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (17 <= CHANNEL_COUNT and 17 in off_channels):
+        get_channel(1+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (18 <= CHANNEL_COUNT and 18 in on_channels):
+        get_channel(2+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (18 <= CHANNEL_COUNT and 18 in off_channels):
+        get_channel(2+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (19 <= CHANNEL_COUNT and 19 in on_channels):
+        get_channel(3+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (19 <= CHANNEL_COUNT and 19 in off_channels):
+        get_channel(3+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (20 <= CHANNEL_COUNT and 20 in on_channels):
+        get_channel(4+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (20 <= CHANNEL_COUNT and 20 in off_channels):
+        get_channel(4+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (21 <= CHANNEL_COUNT and 21 in on_channels):
+        get_channel(5+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (21 <= CHANNEL_COUNT and 21 in off_channels):
+        get_channel(5+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (22 <= CHANNEL_COUNT and 22 in on_channels):
+        get_channel(6+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (22 <= CHANNEL_COUNT and 22 in off_channels):
+        get_channel(6+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (23 <= CHANNEL_COUNT and 23 in on_channels):
+        get_channel(7+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (23 <= CHANNEL_COUNT and 23 in off_channels):
+        get_channel(7+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (24 <= CHANNEL_COUNT and 24 in on_channels):
+        get_channel(8+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (24 <= CHANNEL_COUNT and 24 in off_channels):
+        get_channel(8+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (25 <= CHANNEL_COUNT and 25 in on_channels):
+        get_channel(9+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (25 <= CHANNEL_COUNT and 25 in off_channels):
+        get_channel(9+16).duty_cycle = dim_range[dim_len - dc]
+    else:
+        sleep(sleep_time)
+    if (26 <= CHANNEL_COUNT and 26 in on_channels):
+        get_channel(10+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (26 <= CHANNEL_COUNT and 26 in off_channels):
+        get_channel(10+16).duty_cycle =dim_range[len(dim_range) -  dc]
+    else:
+        sleep(sleep_time)
+    if (27 <= CHANNEL_COUNT and 27 in on_channels):
+        get_channel(11+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (27 <= CHANNEL_COUNT and 27 in off_channels):
+        get_channel(11+16).duty_cycle =dim_range[len(dim_range) -  dc]
+    else:
+        sleep(sleep_time)
+    if (28 <= CHANNEL_COUNT and 28 in on_channels):
+        get_channel(12+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (28 <= CHANNEL_COUNT and 28 in off_channels):
+        get_channel(12+16).duty_cycle =dim_range[len(dim_range) -  dc]
+    else:
+        sleep(sleep_time)
+    if (29 <= CHANNEL_COUNT and 29 in on_channels):
+        get_channel(13+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (29 <= CHANNEL_COUNT and 29 in off_channels):
+        get_channel(13+16).duty_cycle =dim_range[len(dim_range) -  dc]
+    else:
+        sleep(sleep_time)
+    if (30 <= CHANNEL_COUNT and 30 in on_channels):
+        get_channel(14+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (30 <= CHANNEL_COUNT and 30 in off_channels):
+        get_channel(14+16).duty_cycle =dim_range[len(dim_range) -  dc]
+    else:
+        sleep(sleep_time)
+    if (31 <= CHANNEL_COUNT and 31 in on_channels):
+        get_channel(15+16).duty_cycle = dc
+    else:
+        sleep(sleep_time)
+    if (31 <= CHANNEL_COUNT and 31 in off_channels):
+        get_channel(15+16).duty_cycle =dim_range[len(dim_range) -  dc]
+    else:
+        sleep(sleep_time)
     
 def turn_on_led(led):
     if debug: print('turn_on_led %s' % (led))
@@ -359,12 +647,33 @@ def all_off(affected_channels=[]):
         set_all(i, affected_channels)
     if verbose: print('total: ', str(round(time.time() - start, 2)))
 
+def command_all(on_channels=[], off_channels=[]):
+    dim_len = len(dim_range)
+
+
 failover_time = datetime.now().time()
+group_mode=False
 while True:
     try:
         frequency = round(get_freq())
-        if debug: print('%sHz' % frequency)
+        if debug and frequency > 10: print('%s Hz' % frequency)
 
+        # If frequency is in group mode
+        if frequency > 500 and frequency < 600:
+            if frequency > 550 and group_mode:
+                on_channels = []
+                off_channels = []
+                for i in range(0, CHANNEL_COUNT):
+                    if verbose: print('Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
+                    if laststatus[i] != status[i]:
+                        if status[i]:
+                            on_channels.append(i)
+                        else:
+                            off_channels.append(i)
+                        laststatus[i] = status[i]
+                group_mode = False
+            group_mode = frequency < 550
+            
         # If frequency is within the LED single channel range
         if frequency > CHANNEL_START and frequency < max_freq:
             channel=determine_channel_num(frequency)
@@ -396,7 +705,7 @@ while True:
         
         
         # All On
-        if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE:
+        if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE and not group_mode:
             allhitcounts[0]+=1
             allresetcounts[0]=0
             if (can_trigger(allhitcounts[0])):
@@ -417,7 +726,7 @@ while True:
                     all_on(affected_channels)
         
         # All Off
-        elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE:
+        elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE and not group_mode:
             allhitcounts[1]+=1
             allresetcounts[1]=0
             if (can_trigger(allhitcounts[1])):
@@ -443,7 +752,7 @@ while True:
                 if (allresetcounts[i]>=resetlength): allresetcounts[i]=0
 
         # If the frequency is greater than the two all on/off channels
-        if frequency > ALL_OFF_FREQ + CHANNEL_SIZE:
+        if frequency > ALL_OFF_FREQ + CHANNEL_SIZE and not group_mode:
             # Update the LED statuses if they have changed
             if laststatus != status:
                 for i in range(0, CHANNEL_COUNT):
@@ -456,6 +765,9 @@ while True:
                         laststatus[i] = status[i]
                 if verbose: print('---------------------')
         
+        # if group_mode:
+        #     print(status)
+
         failover_diff = get_failover_seconds(failover_time)
         if (failover_diff > FAILOVER_SECONDS):
             already_on = check_statuses(status)
@@ -467,7 +779,7 @@ while True:
                     if not status[i]: affected_channels.append(i)
                     laststatus[i] = True
                     status[i] = True
-            all_on(affected_channels)
+                all_on(affected_channels)
 
 
     except KeyboardInterrupt:
