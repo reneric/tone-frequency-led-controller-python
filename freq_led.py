@@ -44,10 +44,8 @@ args = parser.parse_args()
 DECIBEL_THRESHOLD=args.decibel_threshold
 # Time to trigger failover state
 FAILOVER_SECONDS=args.failover_seconds
-# Margin of error
-BANDWIDTH=10
 # How many 46ms segments before we determine it is a legitimate tone
-triggerlength=8
+triggerlength=6
 # How many false 46ms blips before we declare the alarm is not ringing
 resetlength=10
 # Enable debug output
@@ -90,6 +88,8 @@ channelhitcounts=[]
 resetcounts=[]
 allhitcounts=[0,0]
 allresetcounts=[0,0]
+groupmodecount=0
+groupmodereset=0
 
 max_freq=0
 channel_start_freqs=[]
@@ -182,7 +182,8 @@ Threshold = 10
 SHORT_NORMALIZE = (1.0/32768.0)
 swidth = 2
 
-def rms(frame):
+def rms(data):
+        frame = data
         count = len(frame) / swidth
         format = "%dh" % (count)
         shorts = struct.unpack(format, frame)
@@ -657,35 +658,19 @@ group_mode=False
 while True:
     try:
         frequency = round(get_freq())
+
         if debug and frequency > 10: print('%s Hz' % frequency)
-        if group_mode: print('GROUP MODE')
-        # If frequency is in group mode
-        if frequency > 500 and frequency < 600:
-            if frequency > 550 and group_mode:
-                on_channels = []
-                off_channels = []
-                for i in range(0, CHANNEL_COUNT):
-                    if verbose: print('Group Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
-                    if laststatus[i] != status[i]:
-                        if status[i]:
-                            on_channels.append(i)
-                        else:
-                            off_channels.append(i)
-                        laststatus[i] = status[i]
-                group_mode = False
-                command_all(on_channels, off_channels)
-                print('GROUP MODE OFF')
-            group_mode = frequency < 550
             
         # If frequency is within the LED single channel range
         if frequency > CHANNEL_START and frequency < max_freq:
             channel=determine_channel_num(frequency)
             channel_index=channel-1
-
+            
             if channel:
                 if debug: print('%sHz' % frequency)
                 channelhitcounts[channel_index]+=1
                 resetcounts[channel_index]=0
+                print('CHANNEL', channel, channelhitcounts[channel_index])
                 if (can_trigger(channelhitcounts[channel_index])):
                     failover_time = datetime.now().time()
                     channelhitcounts[channel_index]=0
@@ -768,9 +753,34 @@ while True:
                         laststatus[i] = status[i]
                 if verbose: print('---------------------')
         
-        # if group_mode:
-        #     print(status)
+        # If frequency is in group mode
+        if group_mode: print('GROUP MODE')
+        if frequency > 500 and frequency < 600:
+            groupmodecount+=1
+            if (can_trigger(groupmodecount)):
+                # If in the "End Group Mode" range and the system is already in group mode
+                if frequency > 550 and group_mode:
+                    on_channels = []
+                    off_channels = []
+                    for i in range(0, CHANNEL_COUNT):
+                        if verbose: print('Group Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
+                        if laststatus[i] != status[i]:
+                            if status[i]:
+                                on_channels.append(i)
+                            else:
+                                off_channels.append(i)
+                            laststatus[i] = status[i]
+                    group_mode = False
+                    command_all(on_channels, off_channels)
+                    print('GROUP MODE OFF')
+                group_mode = frequency < 550
+            # If group mode counter not in threshold
+            else:
+                groupmodecount=0
+                groupmodereset+=1
+                if (groupmodereset>=resetlength): groupmodereset=0
 
+        # If failover count is in the failover threshold
         failover_diff = get_failover_seconds(failover_time)
         if (failover_diff > FAILOVER_SECONDS):
             already_on = check_statuses(status)
