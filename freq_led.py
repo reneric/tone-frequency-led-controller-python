@@ -178,24 +178,21 @@ def get_channel(channel):
     pca_channel = channel if channel < 16 else channel - 16
     return pca.channels[pca_channel]
 
-Threshold = 10
-
-SHORT_NORMALIZE = (1.0/32768.0)
-swidth = 2
-
 def rms(data):
-        frame = data
-        count = len(frame) / swidth
-        format = "%dh" % (count)
-        shorts = struct.unpack(format, frame)
+    SHORT_NORMALIZE = (1.0/32768.0)
+    swidth = 2
+    frame = data
+    count = len(frame) / swidth
+    format = "%dh" % (count)
+    shorts = struct.unpack(format, frame)
 
-        sum_squares = 0.0
-        for sample in shorts:
-            n = sample * SHORT_NORMALIZE
-            sum_squares += n * n
-        rms = math.pow(sum_squares / count, 0.5)
+    sum_squares = 0.0
+    for sample in shorts:
+        n = sample * SHORT_NORMALIZE
+        sum_squares += n * n
+    rms = math.pow(sum_squares / count, 0.5)
 
-        return rms * 1000
+    return rms * 1000
 
 def get_freq():
     while _stream.get_read_available()< NUM_SAMPLES: sleep(0.01)
@@ -621,6 +618,19 @@ def all_off(affected_channels=[]):
 def command_all(on_channels=[], off_channels=[]):
     for i in range(len(dim_range)):
         set_all_command(i, on_channels, off_channels)
+
+def startup_sequence():
+    left = left_channels()
+    right = right_channels()
+    all = all_channels()
+    all_off(all)
+    all_on(all)
+    all_off(all)
+    all_on(left)
+    all_on(right)
+    all_off(all)
+
+startup_sequence()
 
 
 failover_time = datetime.now().time()
