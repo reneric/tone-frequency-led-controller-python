@@ -64,10 +64,10 @@ CHANNEL_COUNT=32
 # The size of each channel frequency block (Hz)
 CHANNEL_SIZE=100
 # The frequency block for the "All On" command
-ALL_ON_FREQ=700
-# The "All Off" frequency range will be the next block of frequencies after the "All On" block
-ALL_OFF_FREQ=ALL_ON_FREQ+CHANNEL_SIZE
-# LED Dim speed
+ALL_ON_FREQ=800
+# The "All Off"( frequency/2) range will be the next block of frequencies after the "All On" block
+ALL_OFF_FREQ=ALL_ON_FREQ+(CHANNEL_SIZE/2)
+# (LED/2) Dim speed
 LED_DIM_SPEED_SECONDS=args.dimmer
 LED_DIM_SPEED=round((0.01133/LED_DIM_SPEED_SECONDS)*15000)
 # Set up sampler
@@ -671,7 +671,7 @@ while True:
         
         
         # All On
-        if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + CHANNEL_SIZE and not group_mode:
+        if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + (CHANNEL_SIZE/2) and not group_mode:
             allhitcounts[0]+=1
             allresetcounts[0]=0
             if (can_trigger(allhitcounts[0])):
@@ -692,7 +692,7 @@ while True:
                     all_on(affected_channels)
         
         # All Off
-        elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + CHANNEL_SIZE and not group_mode:
+        elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + (CHANNEL_SIZE/2) and not group_mode:
             allhitcounts[1]+=1
             allresetcounts[1]=0
             if (can_trigger(allhitcounts[1])):
@@ -718,7 +718,7 @@ while True:
                 if (allresetcounts[i]>=resetlength): allresetcounts[i]=0
 
         # If the frequency is greater than the two all on/off channels
-        if frequency > ALL_OFF_FREQ + CHANNEL_SIZE and not group_mode:
+        if frequency > ALL_OFF_FREQ + (CHANNEL_SIZE/2) and not group_mode:
             # Update the LED statuses if they have changed
             if laststatus != status:
                 for i in range(0, CHANNEL_COUNT):
