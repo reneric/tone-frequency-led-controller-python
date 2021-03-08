@@ -627,6 +627,8 @@ def all_off(affected_channels=[]):
     if verbose and debug: print('total: ', str(round(time.time() - start, 2)))
 
 def command_all(on_channels=[], off_channels=[]):
+    print(on_channels)
+    print(off_channels)
     for i in range(len(dim_range)):
         set_all_command(i, on_channels, off_channels)
 
@@ -752,11 +754,11 @@ while True:
                 affected_channels = []
                 if not already_on:
                     for i in sg:
-                        if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
+                        if verbose: print('Special Channel %s: %s' % (i + 1, 'ON'))
                         # Only turn ON lights if they are currently OFF
                         if not status[i]: affected_channels.append(i)
-                        laststatus[i] = True
                         status[i] = True
+                        if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
                     if not group_mode: all_on(affected_channels)
         
@@ -776,8 +778,8 @@ while True:
                         if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
                         # Only turn ON lights if they are currently OFF
                         if not status[i]: affected_channels.append(i)
-                        laststatus[i] = True
                         status[i] = True
+                        if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
                     if not group_mode: all_on(affected_channels)
         # Left Off
@@ -796,8 +798,8 @@ while True:
                         if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
                         # Only turn ON lights if they are currently OFF
                         if not status[i]: affected_channels.append(i)
-                        laststatus[i] = False
                         status[i] = False
+                        if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
                     if not group_mode: all_off(affected_channels)
 
@@ -817,8 +819,8 @@ while True:
                         if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
                         # Only turn ON lights if they are currently OFF
                         if not status[i]: affected_channels.append(i)
-                        laststatus[i] = True
                         status[i] = True
+                        if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
                     if not group_mode: all_on(affected_channels)
         # Right Off
@@ -837,8 +839,8 @@ while True:
                         if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
                         # Only turn ON lights if they are currently OFF
                         if not status[i]: affected_channels.append(i)
-                        laststatus[i] = False
                         status[i] = False
+                        if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
                     if not group_mode: all_off(affected_channels)
         
@@ -871,6 +873,9 @@ while True:
                 if frequency > 550 and group_mode:
                     on_channels = []
                     off_channels = []
+                    print(laststatus)
+                    print(status)
+
                     for i in ALL_CHANNELS:
                         if verbose: print('Group Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
                         if laststatus[i] != status[i]:
