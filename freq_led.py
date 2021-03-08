@@ -775,7 +775,7 @@ while True:
                 affected_channels = []
                 if not already_on:
                     for i in LEFT_CHANNELS:
-                        if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
+                        if verbose: print('Left Channel %s: %s' % (i + 1, 'ON'))
                         # Only turn ON lights if they are currently OFF
                         if not status[i]: affected_channels.append(i)
                         status[i] = True
@@ -795,12 +795,13 @@ while True:
                 affected_channels = []
                 if not already_off:
                     for i in LEFT_CHANNELS:
-                        if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
-                        # Only turn ON lights if they are currently OFF
-                        if not status[i]: affected_channels.append(i)
+                        if verbose: print('Left Channel %s: %s' % (i + 1, 'OFF'))
+                        # Only turn OFF lights if they are currently ON
+                        if status[i]: affected_channels.append(i)
                         status[i] = False
                         if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
+                    print(affected_channels)
                     if not group_mode: all_off(affected_channels)
 
         # Right On
@@ -816,7 +817,7 @@ while True:
                 affected_channels = []
                 if not already_on:
                     for i in RIGHT_CHANNELS:
-                        if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
+                        if verbose: print('Right Channel %s: %s' % (i + 1, 'ON'))
                         # Only turn ON lights if they are currently OFF
                         if not status[i]: affected_channels.append(i)
                         status[i] = True
@@ -836,9 +837,9 @@ while True:
                 affected_channels = []
                 if not already_off:
                     for i in RIGHT_CHANNELS:
-                        if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
-                        # Only turn ON lights if they are currently OFF
-                        if not status[i]: affected_channels.append(i)
+                        if verbose: print('Right Channel %s: %s' % (i + 1, 'OFF'))
+                        # Only turn OFF lights if they are currently ON
+                        if status[i]: affected_channels.append(i)
                         status[i] = False
                         if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
