@@ -39,6 +39,12 @@ parser.add_argument('-fs', '--failover-seconds', dest='failover_seconds', action
 parser.add_argument('-db', '--decibel-threshold', dest='decibel_threshold', action="store", default=-10, type=int, help="The decibel threshold to gate the audio")
 parser.add_argument('-tl', '--trigger-length', dest='trigger_length', action="store", default=5, type=int, help="How many segments before we determine it is a legitimate tone")
 parser.add_argument('-ss', '--startup-sequence', dest='startup_sequence', action="store_true", default=False, help="Enable/disable startup sequence")
+parser.add_argument('-ga', '--group-a', dest='group_a', type=str)
+parser.add_argument('-gb', '--group-b', dest='group_b', type=str)
+parser.add_argument('-gc', '--group-c', dest='group_c', type=str)
+parser.add_argument('-gd', '--group-d', dest='group_d', type=str)
+parser.add_argument('-ge', '--group-e', dest='group_e', type=str)
+parser.add_argument('-gf', '--group-f', dest='group_f', type=str)
 
 args = parser.parse_args()
 
@@ -111,16 +117,23 @@ channel_end_freqs=[]
 status=[]
 laststatus=[]
 
+# Group parsing
+def parse_group_args(group):
+    if group:
+        return [int(i)-1 for i in group.split(',')]
+    return group
+
 # Special Groups
 ALL_CHANNELS=[i for i in range(0, CHANNEL_COUNT)]
 LEFT_CHANNELS=[i for i in range(0,13)]
 RIGHT_CHANNELS=[i for i in range(13,26)]
-BLUE_ANGELS_CHANNELS=[i for i in range(0,6)]
-SKYHAWK_CHANNELS=[i for i in range(9,11)]
-NAVIHAWK_CHANNELS=[i for i in range(12,13)]
-AQUALAND_CHANNELS=[i for i in range(13,16)]
-SAILHAWK_CHANNELS=[i for i in range(24,26)]
-PROMASTER_CHANNELS=[i for i in range(22,24)]
+GROUP_A=parse_group_args(args.group_a) if args.group_a else [i for i in range(0,6)]
+GROUP_B=parse_group_args(args.group_b) if args.group_b else [i for i in range(9,11)]
+GROUP_C=parse_group_args(args.group_c) if args.group_c else [i for i in range(12,13)]
+GROUP_D=parse_group_args(args.group_d) if args.group_d else [i for i in range(13,16)]
+GROUP_E=parse_group_args(args.group_e) if args.group_e else [i for i in range(24,26)]
+GROUP_F=parse_group_args(args.group_f) if args.group_f else [i for i in range(22,24)]
+
 
 for i in range(0,CHANNEL_COUNT):
     led = i + 1
@@ -634,12 +647,12 @@ def command_all(on_channels=[], off_channels=[]):
 
 def choose_special_group(freq):
     special_dict = {
-       0: BLUE_ANGELS_CHANNELS,
-       1: SKYHAWK_CHANNELS,
-       2: NAVIHAWK_CHANNELS,
-       3: AQUALAND_CHANNELS,
-       4: SAILHAWK_CHANNELS,
-       5: PROMASTER_CHANNELS, 
+       0: GROUP_A,
+       1: GROUP_B,
+       2: GROUP_C,
+       3: GROUP_D,
+       4: GROUP_E,
+       5: GROUP_F, 
     }
     group = math.trunc(math.floor((freq - 5000) / 100))
     return special_dict[group]
