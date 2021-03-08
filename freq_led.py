@@ -801,7 +801,6 @@ while True:
                         status[i] = False
                         if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
-                    print(affected_channels)
                     if not group_mode: all_off(affected_channels)
 
         # Right On
@@ -874,9 +873,6 @@ while True:
                 if frequency > 550 and group_mode:
                     on_channels = []
                     off_channels = []
-                    print(laststatus)
-                    print(status)
-
                     for i in ALL_CHANNELS:
                         if verbose: print('Group Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
                         if laststatus[i] != status[i]:
