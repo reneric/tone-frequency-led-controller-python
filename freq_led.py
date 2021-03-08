@@ -641,8 +641,14 @@ def choose_special_group(freq):
        4: SAILHAWK_CHANNELS,
        5: PROMASTER_CHANNELS, 
     }
-    s = math.trunc(math.floor((freq - 5000) / 100))
-    return special_dict[s]
+    group = math.trunc(math.floor((freq - 5000) / 100))
+    return special_dict[group]
+
+def choose_on_or_off(freq):
+    group_num = math.trunc(math.floor((freq - 5000) / 100))
+    trigger = (freq - 5000) - (group_num*100)
+    return 100/trigger >= 2
+
 
 def startup_sequence():
     print('Running startup sequence...')
@@ -740,27 +746,32 @@ while True:
                     if verbose: print('---------------------')
                     all_off(affected_channels)
 
-        # Special Group On
+        # Special Group
         elif is_in_range(frequency, SPECIAL_GROUP_FREQ, SPECIAL_GROUP_FREQ + 6000):
             allhitcounts[6]+=1
             allresetcounts[6]=0
             if (can_trigger(allhitcounts[6])):
+                on_trigger = choose_on_or_off(frequency)
                 failover_time = datetime.now().time()
                 allhitcounts[6]=0
                 allresetcounts[6]=0
                 sg = choose_special_group(frequency)
                 sg_status = [status[i] for i in sg]
-                already_on = check_statuses(sg_status)
+                already_set = check_statuses(sg_status, on_trigger)
                 affected_channels = []
-                if not already_on:
+                if not already_set:
                     for i in sg:
-                        if verbose: print('Special Channel %s: %s' % (i + 1, 'ON'))
+                        if verbose: print('Special Channel %s: %s' % (i + 1, 'ON' if not status[i] else 'OFF'))
                         # Only turn ON lights if they are currently OFF
-                        if not status[i]: affected_channels.append(i)
-                        status[i] = True
+                        if not status[i] == on_trigger: affected_channels.append(i)
+                        status[i] = on_trigger
                         if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
-                    if not group_mode: all_on(affected_channels)
+                    if not group_mode:
+                        if on_trigger: 
+                            all_on(affected_channels)
+                        else:
+                            all_off(affected_channels)
         
         # Left On
         elif is_in_range(frequency, LEFT_ON_FREQ, LEFT_ON_FREQ + HALF_CHANNEL):
