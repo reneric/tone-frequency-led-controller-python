@@ -63,10 +63,13 @@ CHANNEL_START=1100
 CHANNEL_COUNT=32
 # The size of each channel frequency block (Hz)
 CHANNEL_SIZE=100
+HALF_CHANNEL=CHANNEL_SIZE/2
 # The frequency block for the "All On" command
 ALL_ON_FREQ=800
 # The "All Off"( frequency/2) range will be the next block of frequencies after the "All On" block
-ALL_OFF_FREQ=ALL_ON_FREQ+(CHANNEL_SIZE/2)
+ALL_OFF_FREQ=ALL_ON_FREQ+HALF_CHANNEL
+# The frequency blocks for the "Special groups"
+SPECIAL_GROUP_FREQ=5000
 # (LED/2) Dim speed
 LED_DIM_SPEED_SECONDS=args.dimmer
 LED_DIM_SPEED=round((0.01133/LED_DIM_SPEED_SECONDS)*15000)
@@ -87,8 +90,9 @@ if verbose: print("LED DIMMER: %s" % LED_DIM_SPEED)
 
 channelhitcounts=[]
 resetcounts=[]
-allhitcounts=[0,0]
-allresetcounts=[0,0]
+# ALL ON, ALL OFF, LEFT ON, LEFT OFF, RIGHT ON, RIGHT OFF, SPECIAL GROUP ON
+allhitcounts=[0,0,0,0,0,0,0]
+allresetcounts=[0,0,0,0,0,0,0]
 groupmodecount=0
 groupmodereset=0
 
@@ -98,6 +102,16 @@ channel_end_freqs=[]
 status=[]
 laststatus=[]
 
+# Special Groups
+ALL_CHANNELS=[i for i in range(0, CHANNEL_COUNT)]
+LEFT_CHANNELS=[i for i in range(0,13)]
+RIGHT_CHANNELS=[i for i in range(13,26)]
+BLUE_ANGELS_CHANNELS=[i for i in range(0,6)]
+SKYHAWK_CHANNELS=[i for i in range(9,11)]
+NAVIHAWK_CHANNELS=[i for i in range(12,13)]
+AQUALAND_CHANNELS=[i for i in range(13,16)]
+SAILHAWK_CHANNELS=[i for i in range(24,26)]
+PROMASTER_CHANNELS=[i for i in range(22,24)]
 
 for i in range(0,CHANNEL_COUNT):
     led = i + 1
@@ -134,24 +148,6 @@ def get_failover_seconds(ft):
 def can_trigger(hit_count):
     return hit_count >= triggerlength
 
-def all_channels():
-    channels = []
-    for i in range(0, CHANNEL_COUNT):
-        channels.append(i)
-    return channels
-
-def left_channels():
-    channels = []
-    for i in range(0, 13):
-        channels.append(i)
-    return channels
-
-def right_channels():
-    channels = []
-    for i in range(13, 26):
-        channels.append(i)
-    return channels
-
 def check_statuses(st, flag=True):  
     chk = True
     for item in st: 
@@ -160,6 +156,9 @@ def check_statuses(st, flag=True):
             break; 
               
     return chk
+
+def is_in_range(freq, start, end):
+    return freq >= start and freq < end
 
 def determine_channel_num(fq):
     channel=0
@@ -197,26 +196,29 @@ def rms(data):
 def get_freq():
     while _stream.get_read_available()< NUM_SAMPLES: sleep(0.01)
     data = _stream.read(_stream.get_read_available())
-    r = rms(data)
-    decibel = 20 * log10(r/20)
-    # if debug and verbose: print('%sdB' % str(round(decibel, 1)))
-    if (decibel < DECIBEL_THRESHOLD):
-        return 0
+    try:
+        r = rms(data)
+        decibel = 20 * log10(r/20)
+        # if debug and verbose: print('%sdB' % str(round(decibel, 1)))
+        if (decibel < DECIBEL_THRESHOLD):
+            return 0
 
-    audio_data  = frombuffer(data, dtype=short)[-NUM_SAMPLES:]
-    # Each data point is a signed 16 bit number, so we can normalize by dividing 32*1024
-    normalized_data = audio_data / 32768.0
-    
-    intensity = abs(fft.fft(normalized_data))[:NUM_SAMPLES//2]
+        audio_data  = frombuffer(data, dtype=short)[-NUM_SAMPLES:]
+        # Each data point is a signed 16 bit number, so we can normalize by dividing 32*1024
+        normalized_data = audio_data / 32768.0
+        
+        intensity = abs(fft.fft(normalized_data))[:NUM_SAMPLES//2]
 
-    which = intensity[1:].argmax()+1    # use quadratic interpolation around the max
-    if which != len(intensity)-1:
-        y0,y1,y2 = log(intensity[which-1:which+2:])
-        x1 = (y2 - y0) * .5 / (2 * y1 - y2 - y0)
-        # find the frequency and output it
-        return (which+x1)*SAMPLING_RATE/NUM_SAMPLES
-    else:
-        return which*SAMPLING_RATE/NUM_SAMPLES
+        which = intensity[1:].argmax()+1    # use quadratic interpolation around the max
+        if which != len(intensity)-1:
+            y0,y1,y2 = log(intensity[which-1:which+2:])
+            x1 = (y2 - y0) * .5 / (2 * y1 - y2 - y0)
+            # find the frequency and output it
+            return (which+x1)*SAMPLING_RATE/NUM_SAMPLES
+        else:
+            return which*SAMPLING_RATE/NUM_SAMPLES
+    except:
+        print('Error', sys.exc_info()[0])
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
@@ -619,16 +621,31 @@ def command_all(on_channels=[], off_channels=[]):
     for i in range(len(dim_range)):
         set_all_command(i, on_channels, off_channels)
 
+def choose_special_group(freq):
+    special_dict = {
+       0: BLUE_ANGELS_CHANNELS,
+       1: SKYHAWK_CHANNELS,
+       2: NAVIHAWK_CHANNELS,
+       3: AQUALAND_CHANNELS,
+       4: SAILHAWK_CHANNELS,
+       5: PROMASTER_CHANNELS, 
+    }
+    s = math.trunc(math.floor((freq - 5000) / 100))
+    return special_dict[s]
+
 def startup_sequence():
-    left = left_channels()
-    right = right_channels()
-    all = all_channels()
-    all_off(all)
-    all_on(all)
-    all_off(all)
-    all_on(left)
-    all_on(right)
-    all_off(all)
+    print('Running startup sequence...')
+    print('All On')
+    all_on(ALL_CHANNELS)
+    print('All Off')
+    all_off(ALL_CHANNELS)
+    print('Left On')
+    all_on(LEFT_CHANNELS)
+    print('Right On')
+    all_on(RIGHT_CHANNELS)
+    print('All Off')
+    all_off(ALL_CHANNELS)
+    print('Startup sequence complete!')
 
 startup_sequence()
 
@@ -642,7 +659,7 @@ while True:
         if debug and frequency > 10: print('%s Hz' % frequency)
             
         # If frequency is within the LED single channel range
-        if frequency > CHANNEL_START and frequency < max_freq:
+        if is_in_range(frequency, CHANNEL_START, max_freq):
             channel=determine_channel_num(frequency)
             channel_index=channel-1
             
@@ -656,33 +673,33 @@ while True:
                     if verbose: print('\nLED %s\n' % (channel))
                     
                     # Set the status to ON if the frequency is in the first have of the channel range. Otherwise, turn it off
-                    status[channel_index]=frequency < channel_start_freqs[channel_index] + (CHANNEL_SIZE/2)
+                    status[channel_index]=frequency < channel_start_freqs[channel_index] + HALF_CHANNEL
             else:
-                for i in range(0, CHANNEL_COUNT):
+                for i in ALL_CHANNELS:
                     channelhitcounts[i]=0
                     resetcounts[i]+=1
                     if (resetcounts[i]>=resetlength): resetcounts[i]=0
                 
         else:
-            for i in range(0, CHANNEL_COUNT):
+            for i in ALL_CHANNELS:
                 channelhitcounts[i]=0
                 resetcounts[i]+=1
                 if (resetcounts[i]>=resetlength): resetcounts[i]=0
         
         
         # All On
-        if frequency >= ALL_ON_FREQ and frequency < ALL_ON_FREQ + (CHANNEL_SIZE/2) and not group_mode:
+        if is_in_range(frequency, ALL_ON_FREQ, ALL_ON_FREQ + HALF_CHANNEL) and not group_mode:
             allhitcounts[0]+=1
             allresetcounts[0]=0
             if (can_trigger(allhitcounts[0])):
                 failover_time = datetime.now().time()
                 allhitcounts[0]=0
                 allresetcounts[0]=0
-            
-                already_on = check_statuses(status)
+
+                group_channels = choose_special_group(frequency)
                 affected_channels = []
-                if not already_on:
-                    for i in range(0, CHANNEL_COUNT):
+                if group_channels and len(group_channels) > 0:
+                    for i in group_channels:
                         if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
                         # Only turn ON lights if they are currently OFF
                         if not status[i]: affected_channels.append(i)
@@ -692,7 +709,7 @@ while True:
                     all_on(affected_channels)
         
         # All Off
-        elif frequency >= ALL_OFF_FREQ and frequency < ALL_OFF_FREQ + (CHANNEL_SIZE/2) and not group_mode:
+        elif is_in_range(frequency, ALL_OFF_FREQ, ALL_OFF_FREQ + HALF_CHANNEL) and not group_mode:
             allhitcounts[1]+=1
             allresetcounts[1]=0
             if (can_trigger(allhitcounts[1])):
@@ -703,7 +720,7 @@ while True:
                 already_off = check_statuses(status, False)
                 affected_channels = []
                 if not already_off:
-                    for i in range(0, CHANNEL_COUNT):
+                    for i in ALL_CHANNELS:
                         if verbose: print('Channel %s: %s' % (i + 1, 'OFF'))
                         # Only turn OFF lights if they are currently ON
                         if status[i]: affected_channels.append(i)
@@ -711,17 +728,40 @@ while True:
                         status[i] = False
                     if verbose: print('---------------------')
                     all_off(affected_channels)
+        # Special Group On
+        elif is_in_range(frequency, SPECIAL_GROUP_FREQ, SPECIAL_GROUP_FREQ + 6000) and not group_mode:
+            allhitcounts[6]+=1
+            allresetcounts[6]=0
+            if (can_trigger(allhitcounts[6])):
+                failover_time = datetime.now().time()
+                allhitcounts[6]=0
+                allresetcounts[6]=0
+                sg = choose_special_group(frequency)
+                sg_status = [status[i] for i in sg]
+                already_on = check_statuses(sg_status)
+                affected_channels = []
+                if not already_on:
+                    
+                    for i in sg:
+                        if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
+                        # Only turn ON lights if they are currently OFF
+                        if not status[i]: affected_channels.append(i)
+                        laststatus[i] = True
+                        status[i] = True
+                    if verbose: print('---------------------')
+                    all_on(affected_channels)
+        
         else:
-            for i in range(0, 2):
+            for i in range(0, 6):
                 allhitcounts[i]=0
                 allresetcounts[i]+=1
                 if (allresetcounts[i]>=resetlength): allresetcounts[i]=0
 
         # If the frequency is greater than the two all on/off channels
-        if frequency > ALL_OFF_FREQ + (CHANNEL_SIZE/2) and not group_mode:
+        if frequency > ALL_OFF_FREQ + HALF_CHANNEL and not group_mode:
             # Update the LED statuses if they have changed
             if laststatus != status:
-                for i in range(0, CHANNEL_COUNT):
+                for i in ALL_CHANNELS:
                     if verbose: print('Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
                     if laststatus[i] != status[i]:
                         if status[i]:
@@ -732,8 +772,7 @@ while True:
                 if verbose: print('---------------------')
         
         # If frequency is in GROUP MODE
-        
-        if frequency > 500 and frequency < 600:
+        if is_in_range(frequency, 500, 600):
             groupmodecount+=1
             if (can_trigger(groupmodecount)):
                 if group_mode and verbose and groupmodecount == triggerlength + 1: print('GROUP MODE ON')
@@ -741,7 +780,7 @@ while True:
                 if frequency > 550 and group_mode:
                     on_channels = []
                     off_channels = []
-                    for i in range(0, CHANNEL_COUNT):
+                    for i in ALL_CHANNELS:
                         if verbose: print('Group Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
                         if laststatus[i] != status[i]:
                             if status[i]:
@@ -762,10 +801,11 @@ while True:
         # If failover count is in the failover threshold
         failover_diff = get_failover_seconds(failover_time)
         if (failover_diff > FAILOVER_SECONDS):
+            print('FAILOVER')
             already_on = check_statuses(status)
             affected_channels = []
             if not already_on:
-                for i in range(0, CHANNEL_COUNT):
+                for i in ALL_CHANNELS:
                     if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
                     # Only turn ON lights if they are currently OFF
                     if not status[i]: affected_channels.append(i)
