@@ -95,11 +95,15 @@ LED_DIM_SPEED_SECONDS=args.dimmer
 LED_DIM_SPEED=round((0.01133/LED_DIM_SPEED_SECONDS)*15000)
 # Set up sampler
 NUM_SAMPLES = 2048
-SAMPLING_RATE = 44100
+SAMPLING_RATE = 48000
+
+
+
 
 pa = pyaudio.PyAudio()
 _stream = pa.open(format=pyaudio.paInt16,
-                  channels=1, rate=SAMPLING_RATE,
+                  channels=1,
+                  rate=SAMPLING_RATE,
                   input=True,
                   frames_per_buffer=NUM_SAMPLES)
 
@@ -224,7 +228,7 @@ def rms(data):
 
 def get_freq():
     while _stream.get_read_available()< NUM_SAMPLES: sleep(0.01)
-    data = _stream.read(_stream.get_read_available())
+    data = _stream.read(_stream.get_read_available(), exception_on_overflow = False)
     try:
         r = rms(data)
         decibel = 20 * log10(r/20)
