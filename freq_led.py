@@ -77,6 +77,10 @@ HALF_CHANNEL=CHANNEL_SIZE/2
 ALL_ON_FREQ=800
 # The "All Off"( frequency/2) range will be the next block of frequencies after the "All On" block
 ALL_OFF_FREQ=ALL_ON_FREQ+HALF_CHANNEL
+# The frequency block for the "All On with offset"  command
+ALL_ON_OFFSET_FREQ=900
+# The "All Off with offset"( frequency/2) range will be the next block of frequencies after the "All On" block
+ALL_OFF_OFFSET_FREQ=ALL_ON_OFFSET_FREQ+HALF_CHANNEL
 # The frequency blocks for the "Special groups"
 SPECIAL_GROUP_FREQ=5000
 # Left Group
@@ -106,8 +110,8 @@ if verbose: print("LED DIMMER: %s" % LED_DIM_SPEED)
 channelhitcounts=[]
 resetcounts=[]
 # ALL ON, ALL OFF, LEFT ON, LEFT OFF, RIGHT ON, RIGHT OFF, SPECIAL GROUP ON
-allhitcounts=[0,0,0,0,0,0,0]
-allresetcounts=[0,0,0,0,0,0,0]
+allhitcounts=[0,0,0,0,0,0,0,0,0]
+allresetcounts=[0,0,0,0,0,0,0,0,0]
 groupmodecount=0
 groupmodereset=0
 
@@ -161,7 +165,9 @@ INPUT_SIZE=50*LED_DIM_SPEED_SECONDS
 OUTPUT_SIZE=19999
 m16 = lambda x: struct.unpack('H', struct.pack('H', x))[0]
 x = range(LOW_DUTY_CYCLE,int(INPUT_SIZE+1))
-dim_range = [m16(round(cie1931(float(L)/INPUT_SIZE)*OUTPUT_SIZE)) for L in x]
+dim_range_original = [m16(round(cie1931(float(L)/INPUT_SIZE)*OUTPUT_SIZE)) for L in x]
+dim_range = [i for i in dim_range_original if i > 200 or i < 10]
+dim_len = len(dim_range) - 1
 
 def get_failover_seconds(ft):
     failover_diff = datetime.combine(datetime.now(), ft) - datetime.combine(datetime.now(), datetime.now().time())
@@ -380,7 +386,6 @@ def set_all(dc, channels):
         sleep(sleep_time)
 
 def set_all_command(i, on_channels, off_channels):
-    dim_len = len(dim_range) - 1
     dc = dim_range[i]
     reversed_dc = dim_range[dim_len - i]
     if (0 <= CHANNEL_COUNT and 0 in on_channels):
@@ -568,42 +573,333 @@ def set_all_command(i, on_channels, off_channels):
     if (26 <= CHANNEL_COUNT and 26 in on_channels):
         get_channel(10+16).duty_cycle = dc
     elif (26 <= CHANNEL_COUNT and 26 in off_channels):
-        get_channel(10+16).duty_cycle =dim_range[len(dim_range) -  dc]
+        get_channel(10+16).duty_cycle = reversed_dc
     else:
         sleep(sleep_time)
     
     if (27 <= CHANNEL_COUNT and 27 in on_channels):
         get_channel(11+16).duty_cycle = dc
     elif (27 <= CHANNEL_COUNT and 27 in off_channels):
-        get_channel(11+16).duty_cycle =dim_range[len(dim_range) -  dc]
+        get_channel(11+16).duty_cycle = reversed_dc
     else:
         sleep(sleep_time)
     
     if (28 <= CHANNEL_COUNT and 28 in on_channels):
         get_channel(12+16).duty_cycle = dc
     elif (28 <= CHANNEL_COUNT and 28 in off_channels):
-        get_channel(12+16).duty_cycle =dim_range[len(dim_range) -  dc]
+        get_channel(12+16).duty_cycle = reversed_dc
     else:
         sleep(sleep_time)
     
     if (29 <= CHANNEL_COUNT and 29 in on_channels):
         get_channel(13+16).duty_cycle = dc
     elif (29 <= CHANNEL_COUNT and 29 in off_channels):
-        get_channel(13+16).duty_cycle =dim_range[len(dim_range) -  dc]
+        get_channel(13+16).duty_cycle = reversed_dc
     else:
         sleep(sleep_time)
     
     if (30 <= CHANNEL_COUNT and 30 in on_channels):
         get_channel(14+16).duty_cycle = dc
     elif (30 <= CHANNEL_COUNT and 30 in off_channels):
-        get_channel(14+16).duty_cycle =dim_range[len(dim_range) -  dc]
+        get_channel(14+16).duty_cycle = reversed_dc
     else:
         sleep(sleep_time)
     
     if (31 <= CHANNEL_COUNT and 31 in on_channels):
         get_channel(15+16).duty_cycle = dc
     elif (31 <= CHANNEL_COUNT and 31 in off_channels):
-        get_channel(15+16).duty_cycle =dim_range[len(dim_range) -  dc]
+        get_channel(15+16).duty_cycle = reversed_dc
+    else:
+        sleep(sleep_time)
+    
+
+offset = 10
+def set_all_command_offset(i, on_channels, off_channels):
+    if (0 <= CHANNEL_COUNT and 0 in on_channels):
+        channel_index = on_channels.index(0)
+        get_channel(0).duty_cycle = dim_range[min(dim_len, i + (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (0 <= CHANNEL_COUNT and 0 in off_channels):
+        channel_index = off_channels.index(0)
+        get_channel(0).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (1 <= CHANNEL_COUNT and 1 in on_channels):
+        channel_index = on_channels.index(1)
+        get_channel(1).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (1 <= CHANNEL_COUNT and 1 in off_channels):
+        channel_index = off_channels.index(1)
+        get_channel(1).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (2 <= CHANNEL_COUNT and 2 in on_channels):
+        channel_index = on_channels.index(2)
+        get_channel(2).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (2 <= CHANNEL_COUNT and 2 in off_channels):
+        channel_index = off_channels.index(2)
+        get_channel(2).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (3 <= CHANNEL_COUNT and 3 in on_channels):
+        channel_index = on_channels.index(3)
+        get_channel(3).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (3 <= CHANNEL_COUNT and 3 in off_channels):
+        channel_index = off_channels.index(3)
+        get_channel(3).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (4 <= CHANNEL_COUNT and 4 in on_channels):
+        channel_index = on_channels.index(4)
+        get_channel(4).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (4 <= CHANNEL_COUNT and 4 in off_channels):
+        channel_index = off_channels.index(4)
+        get_channel(4).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (5 <= CHANNEL_COUNT and 5 in on_channels):
+        channel_index = on_channels.index(5)
+        get_channel(5).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (5 <= CHANNEL_COUNT and 5 in off_channels):
+        channel_index = off_channels.index(5)
+        get_channel(5).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (6 <= CHANNEL_COUNT and 6 in on_channels):
+        channel_index = on_channels.index(6)
+        get_channel(6).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (6 <= CHANNEL_COUNT and 6 in off_channels):
+        channel_index = off_channels.index(6)
+        get_channel(6).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (7 <= CHANNEL_COUNT and 7 in on_channels):
+        channel_index = on_channels.index(7)
+        get_channel(7).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (7 <= CHANNEL_COUNT and 7 in off_channels):
+        channel_index = off_channels.index(7)
+        get_channel(7).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (8 <= CHANNEL_COUNT and 8 in on_channels):
+        channel_index = on_channels.index(8)
+        get_channel(8).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (8 <= CHANNEL_COUNT and 8 in off_channels):
+        channel_index = off_channels.index(8)
+        get_channel(8).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (9 <= CHANNEL_COUNT and 9 in on_channels):
+        channel_index = on_channels.index(9)
+        get_channel(9).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (9 <= CHANNEL_COUNT and 9 in off_channels):
+        channel_index = off_channels.index(9)
+        get_channel(9).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (10 <= CHANNEL_COUNT and 10 in on_channels):
+        channel_index = on_channels.index(10)
+        get_channel(10).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (10 <= CHANNEL_COUNT and 10 in off_channels):
+        channel_index = off_channels.index(10)
+        get_channel(10).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (11 <= CHANNEL_COUNT and 11 in on_channels):
+        channel_index = on_channels.index(11)
+        get_channel(11).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (11 <= CHANNEL_COUNT and 11 in off_channels):
+        channel_index = off_channels.index(11)
+        get_channel(11).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (12 <= CHANNEL_COUNT and 12 in on_channels):
+        channel_index = on_channels.index(12)
+        get_channel(12).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (12 <= CHANNEL_COUNT and 12 in off_channels):
+        channel_index = off_channels.index(12)
+        get_channel(12).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (13 <= CHANNEL_COUNT and 13 in on_channels):
+        channel_index = on_channels.index(13)
+        get_channel(13).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (13 <= CHANNEL_COUNT and 13 in off_channels):
+        channel_index = off_channels.index(13)
+        get_channel(13).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (14 <= CHANNEL_COUNT and 14 in on_channels):
+        channel_index = on_channels.index(14)
+        get_channel(14).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (14 <= CHANNEL_COUNT and 14 in off_channels):
+        channel_index = off_channels.index(14)
+        get_channel(14).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (15 <= CHANNEL_COUNT and 15 in on_channels):
+        channel_index = on_channels.index(15)
+        get_channel(15).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (15 <= CHANNEL_COUNT and 15 in off_channels):
+        channel_index = off_channels.index(15)
+        get_channel(15).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (16 <= CHANNEL_COUNT and 16 in on_channels):
+        channel_index = on_channels.index(16)
+        get_channel(0+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (16 <= CHANNEL_COUNT and 16 in off_channels):
+        channel_index = off_channels.index(16)
+        get_channel(0+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (17 <= CHANNEL_COUNT and 17 in on_channels):
+        channel_index = on_channels.index(17)
+        get_channel(1+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (17 <= CHANNEL_COUNT and 17 in off_channels):
+        channel_index = off_channels.index(17)
+        get_channel(1+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (18 <= CHANNEL_COUNT and 18 in on_channels):
+        channel_index = on_channels.index(18)
+        get_channel(2+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (18 <= CHANNEL_COUNT and 18 in off_channels):
+        channel_index = off_channels.index(18)
+        get_channel(2+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (19 <= CHANNEL_COUNT and 19 in on_channels):
+        channel_index = on_channels.index(19)
+        get_channel(3+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (19 <= CHANNEL_COUNT and 19 in off_channels):
+        channel_index = off_channels.index(19)
+        get_channel(3+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (20 <= CHANNEL_COUNT and 20 in on_channels):
+        channel_index = on_channels.index(20)
+        get_channel(4+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (20 <= CHANNEL_COUNT and 20 in off_channels):
+        channel_index = off_channels.index(20)
+        get_channel(4+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (21 <= CHANNEL_COUNT and 21 in on_channels):
+        channel_index = on_channels.index(21)
+        get_channel(5+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (21 <= CHANNEL_COUNT and 21 in off_channels):
+        channel_index = off_channels.index(21)
+        get_channel(5+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (22 <= CHANNEL_COUNT and 22 in on_channels):
+        channel_index = on_channels.index(22)
+        get_channel(6+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (22 <= CHANNEL_COUNT and 22 in off_channels):
+        channel_index = off_channels.index(22)
+        get_channel(6+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (23 <= CHANNEL_COUNT and 23 in on_channels):
+        channel_index = on_channels.index(23)
+        get_channel(7+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (23 <= CHANNEL_COUNT and 23 in off_channels):
+        channel_index = off_channels.index(23)
+        get_channel(7+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (24 <= CHANNEL_COUNT and 24 in on_channels):
+        channel_index = on_channels.index(24)
+        get_channel(8+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (24 <= CHANNEL_COUNT and 24 in off_channels):
+        channel_index = off_channels.index(24)
+        get_channel(8+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (25 <= CHANNEL_COUNT and 25 in on_channels):
+        channel_index = on_channels.index(25)
+        get_channel(9+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (25 <= CHANNEL_COUNT and 25 in off_channels):
+        channel_index = off_channels.index(25)
+        get_channel(9+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (26 <= CHANNEL_COUNT and 26 in on_channels):
+        channel_index = on_channels.index(26)
+        get_channel(10+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (26 <= CHANNEL_COUNT and 26 in off_channels):
+        channel_index = off_channels.index(26)
+        get_channel(10+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (27 <= CHANNEL_COUNT and 27 in on_channels):
+        channel_index = on_channels.index(27)
+        get_channel(11+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (27 <= CHANNEL_COUNT and 27 in off_channels):
+        channel_index = off_channels.index(27)
+        get_channel(11+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (28 <= CHANNEL_COUNT and 28 in on_channels):
+        channel_index = on_channels.index(28)
+        get_channel(12+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (28 <= CHANNEL_COUNT and 28 in off_channels):
+        channel_index = off_channels.index(28)
+        get_channel(12+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (29 <= CHANNEL_COUNT and 29 in on_channels):
+        channel_index = on_channels.index(29)
+        get_channel(13+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (29 <= CHANNEL_COUNT and 29 in off_channels):
+        channel_index = off_channels.index(29)
+        get_channel(13+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (30 <= CHANNEL_COUNT and 30 in on_channels):
+        channel_index = on_channels.index(30)
+        get_channel(14+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (30 <= CHANNEL_COUNT and 30 in off_channels):
+        channel_index = off_channels.index(30)
+        get_channel(14+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
+    else:
+        sleep(sleep_time)
+    
+    if (31 <= CHANNEL_COUNT and 31 in on_channels):
+        channel_index = on_channels.index(31)
+        get_channel(15+16).duty_cycle = dim_range[min(dim_len, i - (channel_index * offset))] if i - (channel_index * offset) > 0 else 0
+    elif (31 <= CHANNEL_COUNT and 31 in off_channels):
+        channel_index = off_channels.index(31)
+        get_channel(15+16).duty_cycle = dim_range[max(0, dim_len + (channel_index * offset) - i)] if dim_len + (channel_index * offset) - i < dim_len else dim_range[dim_len]
     else:
         sleep(sleep_time)
     
@@ -640,10 +936,13 @@ def all_off(affected_channels=[]):
     if verbose and debug: print('total: ', str(round(time.time() - start, 2)))
 
 def command_all(on_channels=[], off_channels=[]):
-    print(on_channels)
-    print(off_channels)
-    for i in range(len(dim_range)):
+    for i in range(dim_len):
         set_all_command(i, on_channels, off_channels)
+
+def command_all_offset(on_channels=[], off_channels=[]):
+    count = len(on_channels) + len(off_channels)
+    for i in range(dim_len + count * offset - 1):
+        set_all_command_offset(i, on_channels, off_channels)
 
 def choose_special_group(freq):
     special_dict = {
@@ -661,7 +960,6 @@ def choose_on_or_off(freq):
     group_num = math.trunc(math.floor((freq - 5000) / 100))
     trigger = (freq - 5000) - (group_num*100)
     return 100/trigger >= 2
-
 
 def startup_sequence():
     print('Running startup sequence...')
@@ -738,6 +1036,27 @@ while True:
                     if verbose: print('---------------------')
                     all_on(affected_channels)
         
+        # All On Offset
+        if is_in_range(frequency, ALL_ON_OFFSET_FREQ, ALL_ON_OFFSET_FREQ + HALF_CHANNEL) and not group_mode:
+            allhitcounts[7]+=1
+            allresetcounts[7]=0
+            if (can_trigger(allhitcounts[7])):
+                failover_time = datetime.now().time()
+                allhitcounts[7]=0
+                allresetcounts[7]=0
+
+                already_on = check_statuses(status)
+                affected_channels = []
+                if not already_on:
+                    for i in ALL_CHANNELS:
+                        if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
+                        # Only turn ON lights if they are currently OFF
+                        if not status[i]: affected_channels.append(i)
+                        laststatus[i] = True
+                        status[i] = True
+                    if verbose: print('---------------------')
+                    command_all_offset(affected_channels)
+        
         # All Off
         elif is_in_range(frequency, ALL_OFF_FREQ, ALL_OFF_FREQ + HALF_CHANNEL) and not group_mode:
             allhitcounts[1]+=1
@@ -758,6 +1077,27 @@ while True:
                         status[i] = False
                     if verbose: print('---------------------')
                     all_off(affected_channels)
+
+        # All Off Offset
+        elif is_in_range(frequency, ALL_OFF_OFFSET_FREQ, ALL_OFF_OFFSET_FREQ + HALF_CHANNEL) and not group_mode:
+            allhitcounts[8]+=1
+            allresetcounts[8]=0
+            if (can_trigger(allhitcounts[8])):
+                failover_time = datetime.now().time()
+                allhitcounts[8]=0
+                allresetcounts[8]=0
+
+                already_off = check_statuses(status, False)
+                affected_channels = []
+                if not already_off:
+                    for i in ALL_CHANNELS:
+                        if verbose: print('Channel %s: %s' % (i + 1, 'OFF'))
+                        # Only turn OFF lights if they are currently ON
+                        if status[i]: affected_channels.append(i)
+                        laststatus[i] = False
+                        status[i] = False
+                    if verbose: print('---------------------')
+                    command_all_offset([], affected_channels)
 
         # Special Group
         elif is_in_range(frequency, SPECIAL_GROUP_FREQ, SPECIAL_GROUP_FREQ + 6000):
@@ -805,7 +1145,7 @@ while True:
                         status[i] = True
                         if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
-                    if not group_mode: all_on(affected_channels)
+                    if not group_mode: command_all(affected_channels)
         # Left Off
         elif is_in_range(frequency, LEFT_OFF_FREQ, LEFT_OFF_FREQ + HALF_CHANNEL):
             allhitcounts[3]+=1
@@ -825,7 +1165,7 @@ while True:
                         status[i] = False
                         if not group_mode: laststatus[i] = status[i]
                     if verbose: print('---------------------')
-                    if not group_mode: all_off(affected_channels)
+                    if not group_mode: command_all([], affected_channels)
 
         # Right On
         elif is_in_range(frequency, RIGHT_ON_FREQ, RIGHT_ON_FREQ + HALF_CHANNEL):
@@ -906,7 +1246,7 @@ while True:
                                 off_channels.append(i)
                             laststatus[i] = status[i]
                     group_mode = False
-                    command_all(on_channels, off_channels)
+                    command_all_offset(on_channels, off_channels)
                     if verbose: print('GROUP MODE OFF')
                 group_mode = frequency < 550
         # If not in group mode range
