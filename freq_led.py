@@ -1101,7 +1101,7 @@ while True:
                 already_off = check_statuses(status, False)
                 affected_channels = []
                 if not already_off:
-                    for i in ALL_CHANNELS:
+                    for i in LEFT_CHANNELS + RIGHT_CHANNELS:
                         if verbose: print('Channel %s: %s' % (i + 1, 'OFF'))
                         # Only turn OFF lights if they are currently ON
                         if status[i]: affected_channels.append(i)
