@@ -38,6 +38,7 @@ parser.add_argument('-hdc', '--high-duty-cycle', dest='high_duty_cycle', action=
 parser.add_argument('-fs', '--failover-seconds', dest='failover_seconds', action="store", default=300, type=int, help="Time to trigger failover state")
 parser.add_argument('-db', '--decibel-threshold', dest='decibel_threshold', action="store", default=-10, type=int, help="The decibel threshold to gate the audio")
 parser.add_argument('-tl', '--trigger-length', dest='trigger_length', action="store", default=5, type=int, help="How many segments before we determine it is a legitimate tone")
+parser.add_argument('-offset', dest='offset', action="store", default=10, type=int, help="Offset for the animation")
 parser.add_argument('-ss', '--startup-sequence', dest='startup_sequence', action="store_true", default=False, help="Enable/disable startup sequence")
 parser.add_argument('-ga', '--group-a', dest='group_a', type=str)
 parser.add_argument('-gb', '--group-b', dest='group_b', type=str)
@@ -613,7 +614,7 @@ def set_all_command(i, on_channels, off_channels):
         sleep(sleep_time)
     
 
-offset = 10
+offset = 10 #int(args.offset)
 def set_all_command_offset(i, on_channels, off_channels):
     if (0 <= CHANNEL_COUNT and 0 in on_channels):
         channel_index = on_channels.index(0)
@@ -1037,7 +1038,7 @@ while True:
                     all_on(affected_channels)
         
         # All On Offset
-        if is_in_range(frequency, ALL_ON_OFFSET_FREQ, ALL_ON_OFFSET_FREQ + HALF_CHANNEL) and not group_mode:
+        elif is_in_range(frequency, ALL_ON_OFFSET_FREQ, ALL_ON_OFFSET_FREQ + HALF_CHANNEL) and not group_mode:
             allhitcounts[7]+=1
             allresetcounts[7]=0
             if (can_trigger(allhitcounts[7])):
