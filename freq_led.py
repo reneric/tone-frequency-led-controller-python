@@ -1065,7 +1065,7 @@ while True:
                         status[i] = True
                     if verbose: print('---------------------')
                     right_copy = copy.deepcopy(RIGHT_CHANNELS)
-                    right_copy.reverse()
+                    
                     command_all_offset(LEFT_CHANNELS + right_copy)
         
         # All Off
@@ -1109,7 +1109,7 @@ while True:
                         status[i] = False
                     if verbose: print('---------------------')
                     right_copy = copy.deepcopy(RIGHT_CHANNELS)
-                    right_copy.reverse()
+                    
                     command_all_offset([], LEFT_CHANNELS + right_copy)
 
         # Special Group
