@@ -1230,6 +1230,7 @@ while True:
         # If the frequency is greater than the two all on/off channels
         if frequency > ALL_OFF_FREQ + HALF_CHANNEL and not group_mode:
             # Update the LED statuses if they have changed
+            failover_time = datetime.now().time()
             if laststatus != status:
                 for i in ALL_CHANNELS:
                     if verbose: print('Channel %s: %s' % (i + 1, 'ON' if status[i] else 'OFF'))
@@ -1245,6 +1246,7 @@ while True:
         if is_in_range(frequency, 500, 600):
             groupmodecount+=1
             if (can_trigger(groupmodecount)):
+                failover_time = datetime.now().time()
                 if group_mode and verbose and groupmodecount == triggerlength + 1: print('GROUP MODE ON')
                 # If in the "End Group Mode" range and the system is already in group mode
                 if frequency > 550 and group_mode:
