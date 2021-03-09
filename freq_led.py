@@ -39,6 +39,7 @@ parser.add_argument('-fs', '--failover-seconds', dest='failover_seconds', action
 parser.add_argument('-db', '--decibel-threshold', dest='decibel_threshold', action="store", default=-10, type=int, help="The decibel threshold to gate the audio")
 parser.add_argument('-tl', '--trigger-length', dest='trigger_length', action="store", default=5, type=int, help="How many segments before we determine it is a legitimate tone")
 parser.add_argument('-offset', dest='offset', action="store", default=10, type=int, help="Offset for the animation")
+parser.add_argument('-sampling-rate', dest='sampling_rate', action="store", default=44100, type=int)
 parser.add_argument('-ss', '--startup-sequence', dest='startup_sequence', action="store_true", default=False, help="Enable/disable startup sequence")
 parser.add_argument('-ga', '--group-a', dest='group_a', type=str)
 parser.add_argument('-gb', '--group-b', dest='group_b', type=str)
@@ -95,7 +96,7 @@ LED_DIM_SPEED_SECONDS=args.dimmer
 LED_DIM_SPEED=round((0.01133/LED_DIM_SPEED_SECONDS)*15000)
 # Set up sampler
 NUM_SAMPLES = 2048
-SAMPLING_RATE = 48000
+SAMPLING_RATE = args.sampling_rate
 
 
 
@@ -230,11 +231,13 @@ def get_freq():
     while _stream.get_read_available()< NUM_SAMPLES: sleep(0.01)
     data = _stream.read(_stream.get_read_available(), exception_on_overflow = False)
     try:
+        decibel = 0
         r = rms(data)
-        decibel = 20 * log10(r/20)
-        # if debug and verbose: print('%sdB' % str(round(decibel, 1)))
-        if (decibel < DECIBEL_THRESHOLD):
-            return 0
+        if r:
+            decibel = 20 * log10(r/20)
+            # if debug and verbose: print('%sdB' % str(round(decibel, 1)))
+            if (decibel < DECIBEL_THRESHOLD):
+                return 0
 
         audio_data  = frombuffer(data, dtype=short)[-NUM_SAMPLES:]
         # Each data point is a signed 16 bit number, so we can normalize by dividing 32*1024
@@ -618,7 +621,7 @@ def set_all_command(i, on_channels, off_channels):
         sleep(sleep_time)
     
 
-offset = 10 #int(args.offset)
+offset = 5 #int(args.offset)
 def set_all_command_offset(i, on_channels, off_channels):
     if (0 <= CHANNEL_COUNT and 0 in on_channels):
         channel_index = on_channels.index(0)
