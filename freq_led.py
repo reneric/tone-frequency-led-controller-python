@@ -4,6 +4,7 @@ from threading import Timer
 from numpy import zeros,linspace,short,fromstring,hstack,log10,log,frombuffer
 from scipy import fft
 from time import sleep
+import copy
 import math
 import RPi.GPIO as GPIO
 import board
@@ -1063,7 +1064,9 @@ while True:
                         laststatus[i] = True
                         status[i] = True
                     if verbose: print('---------------------')
-                    command_all_offset(affected_channels)
+                    right_copy = copy.deepcopy(RIGHT_CHANNELS)
+                    right_copy.reverse()
+                    command_all_offset(LEFT_CHANNELS + right_copy)
         
         # All Off
         elif is_in_range(frequency, ALL_OFF_FREQ, ALL_OFF_FREQ + HALF_CHANNEL) and not group_mode:
@@ -1105,7 +1108,9 @@ while True:
                         laststatus[i] = False
                         status[i] = False
                     if verbose: print('---------------------')
-                    command_all_offset([], affected_channels)
+                    right_copy = copy.deepcopy(RIGHT_CHANNELS)
+                    right_copy.reverse()
+                    command_all_offset([], LEFT_CHANNELS + right_copy)
 
         # Special Group
         elif is_in_range(frequency, SPECIAL_GROUP_FREQ, SPECIAL_GROUP_FREQ + 6000):
