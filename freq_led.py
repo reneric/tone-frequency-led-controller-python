@@ -1246,7 +1246,7 @@ while True:
                                 off_channels.append(i)
                             laststatus[i] = status[i]
                     group_mode = False
-                    command_all_offset(on_channels, off_channels)
+                    command_all(on_channels, off_channels)
                     if verbose: print('GROUP MODE OFF')
                 group_mode = frequency < 550
         # If not in group mode range
