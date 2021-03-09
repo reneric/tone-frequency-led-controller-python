@@ -166,7 +166,7 @@ OUTPUT_SIZE=19999
 m16 = lambda x: struct.unpack('H', struct.pack('H', x))[0]
 x = range(LOW_DUTY_CYCLE,int(INPUT_SIZE+1))
 dim_range_original = [m16(round(cie1931(float(L)/INPUT_SIZE)*OUTPUT_SIZE)) for L in x]
-dim_range = [i for i in dim_range_original if i > 200 or i < 10]
+dim_range = [i for i in dim_range_original if i > 20 or i < 10]
 dim_len = len(dim_range) - 1
 
 def get_failover_seconds(ft):
