@@ -1274,10 +1274,11 @@ while True:
         # If failover count is in the failover threshold
         failover_diff = get_failover_seconds(failover_time)
         if (failover_diff > FAILOVER_SECONDS):
-            print('FAILOVER')
+            
             already_on = check_statuses(status)
             affected_channels = []
             if not already_on:
+                print('FAILOVER')
                 for i in ALL_CHANNELS:
                     if verbose: print('Channel %s: %s' % (i + 1, 'ON'))
                     # Only turn ON lights if they are currently OFF
