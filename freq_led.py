@@ -40,7 +40,7 @@ parser.add_argument('-fs', '--failover-seconds', dest='failover_seconds', action
 parser.add_argument('-db', '--decibel-threshold', dest='decibel_threshold', action="store", default=-10, type=int, help="The decibel threshold to gate the audio")
 parser.add_argument('-tl', '--trigger-length', dest='trigger_length', action="store", default=5, type=int, help="How many segments before we determine it is a legitimate tone")
 parser.add_argument('-offset', dest='offset', action="store", default=10, type=int, help="Offset for the animation")
-parser.add_argument('-sampling-rate', dest='sampling_rate', action="store", default=44100, type=int)
+parser.add_argument('-sr', '--sampling-rate', dest='sampling_rate', action="store", default=44100, type=int)
 parser.add_argument('-ss', '--startup-sequence', dest='startup_sequence', action="store_true", default=False, help="Enable/disable startup sequence")
 parser.add_argument('-ga', '--group-a', dest='group_a', type=str)
 parser.add_argument('-gb', '--group-b', dest='group_b', type=str)
