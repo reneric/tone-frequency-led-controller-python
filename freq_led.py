@@ -999,12 +999,11 @@ while True:
         if is_in_range(frequency, CHANNEL_START, max_freq):
             channel=determine_channel_num(frequency)
             channel_index=channel-1
-            
+            failover_time = datetime.now().time()
             if channel:
                 channelhitcounts[channel_index]+=1
                 resetcounts[channel_index]=0
                 if (can_trigger(channelhitcounts[channel_index])):
-                    failover_time = datetime.now().time()
                     channelhitcounts[channel_index]=0
                     resetcounts[channel_index]=0
                     if verbose: print('\nLED %s\n' % (channel))
@@ -1028,8 +1027,8 @@ while True:
         if is_in_range(frequency, ALL_ON_FREQ, ALL_ON_FREQ + HALF_CHANNEL) and not group_mode:
             allhitcounts[0]+=1
             allresetcounts[0]=0
+            failover_time = datetime.now().time()
             if (can_trigger(allhitcounts[0])):
-                failover_time = datetime.now().time()
                 allhitcounts[0]=0
                 allresetcounts[0]=0
 
@@ -1049,8 +1048,8 @@ while True:
         elif is_in_range(frequency, ALL_ON_OFFSET_FREQ, ALL_ON_OFFSET_FREQ + HALF_CHANNEL) and not group_mode:
             allhitcounts[7]+=1
             allresetcounts[7]=0
+            failover_time = datetime.now().time()
             if (can_trigger(allhitcounts[7])):
-                failover_time = datetime.now().time()
                 allhitcounts[7]=0
                 allresetcounts[7]=0
 
@@ -1072,8 +1071,8 @@ while True:
         elif is_in_range(frequency, ALL_OFF_FREQ, ALL_OFF_FREQ + HALF_CHANNEL) and not group_mode:
             allhitcounts[1]+=1
             allresetcounts[1]=0
+            failover_time = datetime.now().time()
             if (can_trigger(allhitcounts[1])):
-                failover_time = datetime.now().time()
                 allhitcounts[1]=0
                 allresetcounts[1]=0
 
@@ -1093,8 +1092,8 @@ while True:
         elif is_in_range(frequency, ALL_OFF_OFFSET_FREQ, ALL_OFF_OFFSET_FREQ + HALF_CHANNEL) and not group_mode:
             allhitcounts[8]+=1
             allresetcounts[8]=0
+            failover_time = datetime.now().time()
             if (can_trigger(allhitcounts[8])):
-                failover_time = datetime.now().time()
                 allhitcounts[8]=0
                 allresetcounts[8]=0
 
@@ -1116,9 +1115,9 @@ while True:
         elif is_in_range(frequency, SPECIAL_GROUP_FREQ, SPECIAL_GROUP_FREQ + 6000):
             allhitcounts[6]+=1
             allresetcounts[6]=0
+            failover_time = datetime.now().time()
             if (can_trigger(allhitcounts[6])):
                 on_trigger = choose_on_or_off(frequency)
-                failover_time = datetime.now().time()
                 allhitcounts[6]=0
                 allresetcounts[6]=0
                 sg = choose_special_group(frequency)
@@ -1143,8 +1142,8 @@ while True:
         elif is_in_range(frequency, LEFT_ON_FREQ, LEFT_ON_FREQ + HALF_CHANNEL):
             allhitcounts[2]+=1
             allresetcounts[2]=0
+            failover_time = datetime.now().time()
             if (can_trigger(allhitcounts[2])):
-                failover_time = datetime.now().time()
                 allhitcounts[2]=0
                 allresetcounts[2]=0
                 sg_status = [status[i] for i in LEFT_CHANNELS]
@@ -1163,8 +1162,9 @@ while True:
         elif is_in_range(frequency, LEFT_OFF_FREQ, LEFT_OFF_FREQ + HALF_CHANNEL):
             allhitcounts[3]+=1
             allresetcounts[3]=0
+            failover_time = datetime.now().time()
             if (can_trigger(allhitcounts[3])):
-                failover_time = datetime.now().time()
+                
                 allhitcounts[3]=0
                 allresetcounts[3]=0
                 sg_status = [status[i] for i in LEFT_CHANNELS]
@@ -1184,8 +1184,8 @@ while True:
         elif is_in_range(frequency, RIGHT_ON_FREQ, RIGHT_ON_FREQ + HALF_CHANNEL):
             allhitcounts[4]+=1
             allresetcounts[4]=0
+            failover_time = datetime.now().time()
             if (can_trigger(allhitcounts[4])):
-                failover_time = datetime.now().time()
                 allhitcounts[4]=0
                 allresetcounts[4]=0
                 sg_status = [status[i] for i in RIGHT_CHANNELS]
@@ -1204,8 +1204,9 @@ while True:
         elif is_in_range(frequency, RIGHT_OFF_FREQ, RIGHT_OFF_FREQ + HALF_CHANNEL):
             allhitcounts[5]+=1
             allresetcounts[5]=0
+            failover_time = datetime.now().time()
             if (can_trigger(allhitcounts[5])):
-                failover_time = datetime.now().time()
+                
                 allhitcounts[5]=0
                 allresetcounts[5]=0
                 sg_status = [status[i] for i in RIGHT_CHANNELS]
